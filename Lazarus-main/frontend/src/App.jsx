@@ -2,24 +2,79 @@ import { Routes, Route, Link } from "react-router-dom";
 import Creator from "./pages/Creator";
 import Investor from "./pages/Investor";
 
-export default function App() {
+import Login from "./pages/Login";
+import CreatorDashboard from "./pages/CreatorDashboard";
+import BrandDashboard from "./pages/BrandDashboard";
+import InvestorDashboard from "./pages/InvestorDashboard";
+import CreateProject from "./pages/CreateProject";
+import ProjectPage from "./pages/ProjectPage";
+import CreatorProfile from "./pages/CreatorProfile";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
+function App() {
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Lazarus Platform</h1>
+    <Routes>
+      {/* Public Route */}
+      <Route path="/" element={<Login />} />
 
-      <nav style={{ marginBottom: "20px" }}>
-        <Link to="/creator" style={{ marginRight: "15px" }}>
-          Creator Dashboard
-        </Link>
-        <Link to="/investor">
-          Investor Dashboard
-        </Link>
-      </nav>
+      {/* Creator Routes */}
+      <Route
+        path="/creator"
+        element={
+          <ProtectedRoute role="creator">
+            <CreatorDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      <Routes>
-        <Route path="/creator" element={<Creator />} />
-        <Route path="/investor" element={<Investor />} />
-      </Routes>
-    </div>
+      <Route
+        path="/create-project"
+        element={
+          <ProtectedRoute role="creator">
+            <CreateProject />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/creator-profile"
+        element={
+          <ProtectedRoute role="creator">
+            <CreatorProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Brand Routes */}
+      <Route
+        path="/brand"
+        element={
+          <ProtectedRoute role="brand">
+            <BrandDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Investor Routes */}
+      <Route
+        path="/investor"
+        element={
+          <ProtectedRoute role="investor">
+            <InvestorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Shared / Authenticated */}
+      <Route
+        path="/project"
+        element={
+          <ProtectedRoute>
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }

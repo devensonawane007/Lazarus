@@ -1,75 +1,94 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
-const API = "http://localhost:5000";
+export default function CreatorDashboard() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
 
-export default function Creator() {
-  const [title, setTitle] = useState("");
-  const [fundingTarget, setFundingTarget] = useState("");
-  const [projects, setProjects] = useState([]);
+  const [portfolio, setPortfolio] = useState({
+    platform: "youtube",
+    url: "",
+    views: ""
+  });
 
-  const loadProjects = async () => {
-    const res = await axios.get(`${API}/api/projects`);
-    setProjects(res.data);
-  };
-
+  // Load saved portfolio
   useEffect(() => {
-    loadProjects();
+    const saved = JSON.parse(localStorage.getItem("creatorPortfolio"));
+    if (saved) setPortfolio(saved);
   }, []);
 
-  const createProject = async () => {
-    if (!title || !fundingTarget) {
-      alert("Title and funding target required");
-      return;
-    }
+  const handleChange = (e) => {
+    setPortfolio({ ...portfolio, [e.target.name]: e.target.value });
+  };
 
-    await axios.post(`${API}/api/projects`, {
-      title,
-      funding_target: fundingTarget
-    });
+  const savePortfolio = () => {
+    localStorage.setItem("creatorPortfolio", JSON.stringify(portfolio));
+    alert("Portfolio saved!");
+  };
 
-    setTitle("");
-    setFundingTarget("");
-    loadProjects();
+  const logout = () => {
+    localStorage.removeItem("user");
+    navigate("/");
   };
 
   return (
-    <div>
+    <div style={{ padding: "40px", maxWidth: "800px", margin: "auto" }}>
       <h2>Creator Dashboard</h2>
-      <p>Create opportunities and raise funds.</p>
 
-      <h3>Create Opportunity</h3>
-      <input
-        placeholder="Project / Opportunity Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <br /><br />
-      <input
-        type="number"
-        placeholder="Funding Target"
-        value={fundingTarget}
-        onChange={(e) => setFundingTarget(e.target.value)}
-      />
-      <br /><br />
-      <button onClick={createProject}>Create</button>
+      <p><strong>Name:</strong> {user?.name}</p>
+      <p><strong>Role:</strong> Creator</p>
 
       <hr />
 
-      <h3>Your Opportunities</h3>
+      <button onClick={() => navigate("/create-project")}>
+        ➕ Create New Project
+      </button>
 
-      {projects.length === 0 && <p>No opportunities created yet</p>}
+      <hr />
 
-      {projects.map((p) => (
-        <div
-          key={p.id}
-          style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}
-        >
-          <strong>{p.title}</strong>
-          <p>Funding Target: ₹{p.funding_target}</p>
-          <p>Status: {p.status}</p>
-        </div>
-      ))}
+      <h3>Portfolio</h3>
+
+      <select name="platform" value={portfolio.platform} onChange={handleChange}>
+        <option value="youtube">YouTube</option>
+        <option value="instagram">Instagram</option>
+        <option value="shorts">YouTube Shorts</option>
+      </select>
+
+      <br /><br />
+
+      <input
+        type="url"
+        name="url"
+        placeholder="Video / Profile URL"
+        value={portfolio.url}
+        onChange={handleChange}
+      />
+
+      <br /><br />
+
+      <input
+        type="number"
+        name="views"
+        placeholder="Most Viewed Video (views)"
+        value={portfolio.views}
+        onChange={handleChange}
+      />
+
+      <br /><br />
+
+      <button onClick={savePortfolio}>Save Portfolio</button>
+
+      <hr />
+
+      <button onClick={() => navigate("/creator-profile")}>
+        🌍 View Public Profile
+      </button>
+
+      <br /><br />
+
+      <button onClick={logout} style={{ color: "red" }}>
+        Logout
+      </button>
     </div>
   );
 }
