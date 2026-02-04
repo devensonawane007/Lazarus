@@ -3,6 +3,7 @@ import Creator from "./pages/Creator";
 import Investor from "./pages/Investor";
 
 import Login from "./pages/Login";
+import Home from "./pages/Home";
 import CreatorDashboard from "./pages/CreatorDashboard";
 import BrandDashboard from "./pages/BrandDashboard";
 import InvestorDashboard from "./pages/InvestorDashboard";
@@ -15,10 +16,20 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      {/* Public Route */}
+      {/* Public */}
       <Route path="/" element={<Login />} />
 
-      {/* Creator Routes */}
+      {/* Creator Home (Agentic AI) */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute role="creator">
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Creator */}
       <Route
         path="/creator"
         element={
@@ -46,7 +57,7 @@ function App() {
         }
       />
 
-      {/* Brand Routes */}
+      {/* Brand */}
       <Route
         path="/brand"
         element={
@@ -56,7 +67,7 @@ function App() {
         }
       />
 
-      {/* Investor Routes */}
+      {/* Investor */}
       <Route
         path="/investor"
         element={
@@ -66,7 +77,7 @@ function App() {
         }
       />
 
-      {/* Shared / Authenticated */}
+      {/* Shared */}
       <Route
         path="/project"
         element={

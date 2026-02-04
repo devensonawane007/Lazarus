@@ -1,17 +1,18 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
+
+// node-fetch for REST API
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* ===============================
-   In-memory stores (hackathon)
-================================ */
-let projects = {};
-let contributions = {};
-let revenues = {};
-let payouts = {};
+console.log("Gemini Key Loaded:", !!process.env.GEMINI_API_KEY);
 
 /* ===============================
    TEST ROUTE
@@ -21,123 +22,90 @@ app.get("/", (req, res) => {
 });
 
 /* ===============================
-   CREATOR: CREATE PROJECT
+   🤖 AGENTIC AI (LOW TOKEN MODE)
 ================================ */
-app.post("/api/projects", (req, res) => {
-  const {
-    title,
-    description,
-    video_type,
-    funding_target,
-    allowed_expenses
-  } = req.body;
+app.post("/api/ai/ideas", async (req, res) => {
+  try {
+    const { query } = req.body;
 
-  if (!title || !funding_target) {
-    return res.status(400).json({ message: "Missing required fields" });
+    if (!query) {
+      return res.status(400).json({ message: "Query required" });
+    }
+
+    // 🔒 STRICT PROMPT (LOW TOKEN)
+    const prompt = `
+You are an AI assistant for content creators.
+
+TASK:
+Generate exactly 3 content ideas.
+
+RULES:
+- Keep response under 200 words
+- No tables
+- No markdown
+- No explanations
+- Use short bullet points only
+
+OUTPUT FORMAT:
+Idea 1:
+Title:
+Platform:
+Monetization:
+
+Idea 2:
+Title:
+Platform:
+Monetization:
+
+Idea 3:
+Title:
+Platform:
+Monetization:
+
+Creator niche: ${query}
+`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }]
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: 600,   // 🔥 TOKEN CONTROL
+            temperature: 0.7
+          }
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.candidates) {
+      console.error("Gemini raw response:", data);
+      return res.status(500).json({ message: "AI returned no output" });
+    }
+
+    const aiText = data.candidates[0].content.parts[0].text;
+
+    console.log("AI OUTPUT:", aiText); // optional log
+
+    res.json({
+      ai_output: aiText
+    });
+
+  } catch (error) {
+    console.error("Gemini error:", error.message);
+    res.status(500).json({ message: "AI generation failed" });
   }
-
-  const project = {
-    id: Date.now().toString(),
-    title,
-    description: description || "",
-    video_type: video_type || "general",
-    funding_target: Number(funding_target),
-    allowed_expenses: allowed_expenses || [],
-    status: "funding",
-    created_at: new Date()
-  };
-
-  projects[project.id] = project;
-  contributions[project.id] = [];
-
-  console.log("Project created:", project);
-
-  res.status(201).json(project);
-});
-
-/* ===============================
-   PUBLIC: LIST PROJECTS
-================================ */
-app.get("/api/projects", (req, res) => {
-  res.json(Object.values(projects));
-});
-
-/* ===============================
-   INVESTOR: CONTRIBUTE
-================================ */
-app.post("/api/contribute", (req, res) => {
-  const { project_id, amount } = req.body;
-
-  if (!project_id || !amount) {
-    return res.status(400).json({ message: "Missing data" });
-  }
-
-  if (!projects[project_id]) {
-    return res.status(404).json({ message: "Project not found" });
-  }
-
-  const contribution = {
-    amount: Number(amount),
-    contributed_at: new Date()
-  };
-
-  contributions[project_id].push(contribution);
-
-  const totalRaised = contributions[project_id].reduce(
-    (sum, c) => sum + c.amount,
-    0
-  );
-
-  res.json({
-    message: "Contribution successful",
-    totalRaised
-  });
-});
-
-/* ===============================
-   SIMULATE REVENUE + AUTO PAYOUT
-================================ */
-app.post("/api/simulate-revenue", (req, res) => {
-  const { project_id, revenue_amount } = req.body;
-
-  if (!project_id || !revenue_amount) {
-    return res.status(400).json({ message: "Missing data" });
-  }
-
-  const projectContributions = contributions[project_id];
-
-  if (!projectContributions || projectContributions.length === 0) {
-    return res.status(400).json({ message: "No contributors found" });
-  }
-
-  const totalInvested = projectContributions.reduce(
-    (sum, c) => sum + c.amount,
-    0
-  );
-
-  const revenue = Number(revenue_amount);
-
-  payouts[project_id] = projectContributions.map((c, index) => ({
-    contributor: `Investor ${index + 1}`,
-    invested: c.amount,
-    payout: Math.round((c.amount / totalInvested) * revenue)
-  }));
-
-  revenues[project_id] = revenue;
-
-  res.json({
-    message: "Revenue distributed automatically",
-    totalRevenue: revenue,
-    payouts: payouts[project_id]
-  });
-});
-
-/* ===============================
-   VIEW PAYOUTS (OPTIONAL)
-================================ */
-app.get("/api/payouts/:project_id", (req, res) => {
-  const { project_id } = req.params;
-  res.json(payouts[project_id] || []);
 });
 
 /* ===============================
