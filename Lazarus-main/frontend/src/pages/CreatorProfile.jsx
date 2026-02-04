@@ -1,44 +1,55 @@
-import { getCreatorAnalytics } from "../utils/creatorAnalytics";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function CreatorProfile() {
+export default function CreateProject() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-  const portfolio = JSON.parse(localStorage.getItem("creatorPortfolio"));
-  const analytics = getCreatorAnalytics();
 
-  // Simple AI-ready credibility score
-  const credibilityScore =
-    analytics.totalProjects * 10 +
-    analytics.activeBackers +
-    Math.min(portfolio?.views / 10000 || 0, 30);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    video_type: "",
+    funding_target: "",
+    allowed_expenses: []
+  });
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch("http://localhost:5000/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...form,
+        creator: {
+          name: user?.name,
+          role: user?.role
+        }
+      })
+    });
+
+    const data = await res.json();
+    navigate("/project", { state: data });
+  };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "800px", margin: "auto" }}>
-      <h2>Creator Public Profile</h2>
+    <div style={{ padding: "40px" }}>
+      <h2>Create Project</h2>
 
-      <p><strong>Name:</strong> {user?.name}</p>
-
-      <hr />
-
-      <h3>Portfolio</h3>
-      <p><strong>Platform:</strong> {portfolio?.platform}</p>
-      <p><strong>Views:</strong> {portfolio?.views}</p>
-
-      <a href={portfolio?.url} target="_blank">
-        View Content
-      </a>
-
-      <hr />
-
-      <h3>Creator Analytics</h3>
-      <p>Total Projects: {analytics.totalProjects}</p>
-      <p>Funding Raised: ₹{analytics.fundingRaised}</p>
-      <p>Active Backers: {analytics.activeBackers}</p>
-
-      <hr />
-
-      <h3>Credibility Score</h3>
-      <h1>{Math.round(credibilityScore)}</h1>
-      <p>(AI-assisted trust indicator)</p>
+      <form onSubmit={handleSubmit}>
+        <input name="title" placeholder="Title" onChange={handleChange} />
+        <br /><br />
+        <textarea name="description" placeholder="Description" onChange={handleChange} />
+        <br /><br />
+        <input name="video_type" placeholder="Video Type" onChange={handleChange} />
+        <br /><br />
+        <input name="funding_target" type="number" placeholder="Funding Target" onChange={handleChange} />
+        <br /><br />
+        <button>Create</button>
+      </form>
     </div>
   );
 }

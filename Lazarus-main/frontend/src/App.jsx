@@ -1,6 +1,4 @@
-import { Routes, Route, Link } from "react-router-dom";
-import Creator from "./pages/Creator";
-import Investor from "./pages/Investor";
+import { Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -16,10 +14,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      {/* Public */}
+      {/* =====================
+          Public Route
+      ====================== */}
       <Route path="/" element={<Login />} />
 
-      {/* Creator Home (Agentic AI) */}
+      {/* =====================
+          Creator Routes
+      ====================== */}
       <Route
         path="/home"
         element={
@@ -29,7 +31,6 @@ function App() {
         }
       />
 
-      {/* Creator */}
       <Route
         path="/creator"
         element={
@@ -57,7 +58,9 @@ function App() {
         }
       />
 
-      {/* Brand */}
+      {/* =====================
+          Brand Routes
+      ====================== */}
       <Route
         path="/brand"
         element={
@@ -67,7 +70,9 @@ function App() {
         }
       />
 
-      {/* Investor */}
+      {/* =====================
+          Investor Routes
+      ====================== */}
       <Route
         path="/investor"
         element={
@@ -77,7 +82,9 @@ function App() {
         }
       />
 
-      {/* Shared */}
+      {/* =====================
+          Shared / Authenticated
+      ====================== */}
       <Route
         path="/project"
         element={
@@ -89,3 +96,5 @@ function App() {
     </Routes>
   );
 }
+
+export default App;
