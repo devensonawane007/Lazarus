@@ -13,6 +13,7 @@ export default function Login() {
     if (form.role === "creator") navigate("/creator");
     if (form.role === "brand") navigate("/brand");
     if (form.role === "investor") navigate("/investor");
+    if (form.role === "creator") navigate("/home");
   };
 
   return (
