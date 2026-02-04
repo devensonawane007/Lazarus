@@ -8,9 +8,9 @@ class Project(models.Model):
 
     title = models.CharField(max_length=200)
 
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    upfront_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    final_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.FloatField()
+    upfront_amount = models.FloatField()
+    final_amount = models.FloatField()
 
     STATUS = [
         ('pending','Pending'),

@@ -1,26 +1,25 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
+import Creator from "./pages/Creator";
+import Investor from "./pages/Investor";
 
-import Login from "./pages/Login";
-import CreatorDashboard from "./pages/CreatorDashboard";
-import BrandDashboard from "./pages/BrandDashboard";
-import InvestorDashboard from "./pages/InvestorDashboard";
-import CreateProject from "./pages/CreateProject";
-import ProjectPage from "./pages/ProjectPage";
-
-function App() {
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1>Lazarus Platform</h1>
 
-      <Route path="/creator" element={<CreatorDashboard />} />
-      <Route path="/brand" element={<BrandDashboard />} />
-      <Route path="/investor" element={<InvestorDashboard />} />
+      <nav style={{ marginBottom: "20px" }}>
+        <Link to="/creator" style={{ marginRight: "15px" }}>
+          Creator Dashboard
+        </Link>
+        <Link to="/investor">
+          Investor Dashboard
+        </Link>
+      </nav>
 
-      {/* Existing routes */}
-      <Route path="/create-project" element={<CreateProject />} />
-      <Route path="/project" element={<ProjectPage />} />
-    </Routes>
+      <Routes>
+        <Route path="/creator" element={<Creator />} />
+        <Route path="/investor" element={<Investor />} />
+      </Routes>
+    </div>
   );
 }
-
-export default App;

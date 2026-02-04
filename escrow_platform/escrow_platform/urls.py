@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/login/', obtain_auth_token),
 
     # APIs
+    path('api/projects/', include('projects.urls')),
     path('api/submissions/', include('submissions.urls')),
     path('api/payments/', include('payments.urls')),
 ]
