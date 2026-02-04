@@ -6,19 +6,73 @@ import BrandDashboard from "./pages/BrandDashboard";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import CreateProject from "./pages/CreateProject";
 import ProjectPage from "./pages/ProjectPage";
+import CreatorProfile from "./pages/CreatorProfile";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Routes>
+      {/* Public Route */}
       <Route path="/" element={<Login />} />
 
-      <Route path="/creator" element={<CreatorDashboard />} />
-      <Route path="/brand" element={<BrandDashboard />} />
-      <Route path="/investor" element={<InvestorDashboard />} />
+      {/* Creator Routes */}
+      <Route
+        path="/creator"
+        element={
+          <ProtectedRoute role="creator">
+            <CreatorDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Existing routes */}
-      <Route path="/create-project" element={<CreateProject />} />
-      <Route path="/project" element={<ProjectPage />} />
+      <Route
+        path="/create-project"
+        element={
+          <ProtectedRoute role="creator">
+            <CreateProject />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/creator-profile"
+        element={
+          <ProtectedRoute role="creator">
+            <CreatorProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Brand Routes */}
+      <Route
+        path="/brand"
+        element={
+          <ProtectedRoute role="brand">
+            <BrandDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Investor Routes */}
+      <Route
+        path="/investor"
+        element={
+          <ProtectedRoute role="investor">
+            <InvestorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Shared / Authenticated */}
+      <Route
+        path="/project"
+        element={
+          <ProtectedRoute>
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
