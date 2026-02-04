@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
+import Creator from "./pages/Creator";
+import Investor from "./pages/Investor";
 
 import Login from "./pages/Login";
 import CreatorDashboard from "./pages/CreatorDashboard";
@@ -76,5 +78,3 @@ function App() {
     </Routes>
   );
 }
-
-export default App;
