@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
@@ -20,4 +21,11 @@
     "uuid": "^13.0.0"
   },
   "type": "commonjs"
+=======
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "pg": "^8.18.0"
+  }
+>>>>>>> 7d259caa592f3703bb9c02f5100affb4352e69a1
 }
