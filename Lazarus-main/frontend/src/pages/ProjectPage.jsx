@@ -11,10 +11,9 @@ export default function ProjectPage() {
   const [payouts, setPayouts] = useState([]);
 
   if (!project) {
-    return <h2>No project data found</h2>;
+    return <h2 style={{ textAlign: "center" }}>No project data found</h2>;
   }
 
-  // Contribute money
   const handleContribute = async () => {
     const response = await fetch("http://localhost:5000/api/contribute", {
       method: "POST",
@@ -30,7 +29,6 @@ export default function ProjectPage() {
     setAmount("");
   };
 
-  // Simulate revenue
   const handleSimulateRevenue = async () => {
     const response = await fetch("http://localhost:5000/api/simulate-revenue", {
       method: "POST",
@@ -46,64 +44,145 @@ export default function ProjectPage() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>{project.title}</h1>
+    <div style={styles.page}>
+      <div style={styles.container}>
 
-      <p><b>Description:</b> {project.description}</p>
-      <p><b>Funding Target:</b> ₹{project.funding_target}</p>
-      <p><b>Total Raised:</b> ₹{totalRaised}</p>
+        {/* Project Info */}
+        <div style={styles.card}>
+          <h1>{project.title}</h1>
+          <p style={{ color: "#555" }}>{project.description}</p>
 
-      <hr />
+          <div style={styles.stats}>
+            <div>
+              <h4>🎯 Target</h4>
+              <p>₹{project.funding_target}</p>
+            </div>
+            <div>
+              <h4>💰 Raised</h4>
+              <p>₹{totalRaised}</p>
+            </div>
+          </div>
+        </div>
 
-      <h3>Contribute to Project</h3>
-      <input
-        type="number"
-        placeholder="Enter amount ₹"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-      <br /><br />
-      <button onClick={handleContribute}>Contribute ₹</button>
+        {/* Contribution */}
+        <div style={styles.card}>
+          <h3>💸 Contribute to Project</h3>
+          <input
+            type="number"
+            placeholder="Enter amount ₹"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            style={styles.input}
+          />
+          <button onClick={handleContribute} style={styles.primaryBtn}>
+            Contribute
+          </button>
+        </div>
 
-      <hr />
+        {/* Revenue Simulation */}
+        <div style={styles.card}>
+          <h3>📈 Simulate Revenue</h3>
+          <input
+            type="number"
+            placeholder="Revenue earned ₹"
+            value={revenue}
+            onChange={(e) => setRevenue(e.target.value)}
+            style={styles.input}
+          />
+          <button onClick={handleSimulateRevenue} style={styles.secondaryBtn}>
+            Simulate & Auto-Payout
+          </button>
+        </div>
 
-      <h3>Simulate Revenue (YouTube / Platform)</h3>
-      <input
-        type="number"
-        placeholder="Enter revenue ₹"
-        value={revenue}
-        onChange={(e) => setRevenue(e.target.value)}
-      />
-      <br /><br />
-      <button onClick={handleSimulateRevenue}>
-        Simulate Revenue & Auto-Payout
-      </button>
+        {/* Payout Table */}
+        <div style={styles.card}>
+          <h3>📊 Payout Distribution</h3>
 
-      <hr />
+          {payouts.length === 0 ? (
+            <p style={{ color: "#777" }}>No payouts yet</p>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th>Contributor</th>
+                  <th>Invested</th>
+                  <th>Payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.map((p, index) => (
+                  <tr key={index}>
+                    <td>{p.contributor}</td>
+                    <td>₹{p.invested}</td>
+                    <td>₹{p.payout}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
 
-      <h3>Payout Distribution</h3>
-      {payouts.length === 0 ? (
-        <p>No payouts yet</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Contributor</th>
-              <th>Invested</th>
-              <th>Payout</th>
-            </tr>
-          </thead>
-          <tbody>
-            {payouts.map((p, index) => (
-              <tr key={index}>
-                <td>{p.contributor}</td>
-                <td>₹{p.invested}</td>
-                <td>₹{p.payout}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    background: "#f4f6f8",
+    minHeight: "100vh",
+    padding: "30px"
+  },
+  container: {
+    maxWidth: "800px",
+    margin: "auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px"
+  },
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.08)"
+  },
+  stats: {
+    display: "flex",
+    gap: "40px",
+    marginTop: "15px"
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc"
+  },
+  primaryBtn: {
+    marginTop: "12px",
+    width: "100%",
+    padding: "12px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#4f46e5",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "15px"
+  },
+  secondaryBtn: {
+    marginTop: "12px",
+    width: "100%",
+    padding: "12px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#16a34a",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "15px"
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "10px"
+  }
+};

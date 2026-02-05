@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 
 // node-fetch for Gemini REST API
 const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+    import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 dotenv.config();
 
@@ -21,13 +21,22 @@ let creators = {};        // creator profiles
 let projects = {};        // creator projects
 let contributions = {};  // investor contributions
 let payouts = {};        // revenue payouts
-let campaigns = {};      // brand campaigns
+let campaigns = [
+    {
+        "id": "123456",
+        "brandName": "Nike",
+        "title": "Fitness Reel Campaign",
+        "niches": ["fitness"],
+
+    }
+]
+    ;      // brand campaigns
 
 /* ===============================
    TEST ROUTE
 ================================ */
 app.get("/", (req, res) => {
-  res.send("Lazarus backend running 🚀");
+    res.send("Lazarus backend running 🚀");
 });
 
 /* ===============================
@@ -38,140 +47,140 @@ app.get("/", (req, res) => {
  * CREATE / UPDATE CREATOR PROFILE
  */
 app.post("/api/creator/profile", (req, res) => {
-  const {
-    creatorId,
-    name,
-    niches,       // array ["tech","ai"]
-    platform,
-    url,
-    followers,
-    avgViews
-  } = req.body;
+    const {
+        creatorId,
+        name,
+        niches,       // array ["tech","ai"]
+        platform,
+        url,
+        followers,
+        avgViews
+    } = req.body;
 
-  if (!creatorId || !name || !niches || niches.length === 0) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
+    if (!creatorId || !name || !niches || niches.length === 0) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
 
-  creators[creatorId] = {
-    id: creatorId,
-    name,
-    niches,
-    portfolio: {
-      platform,
-      url,
-      followers,
-      avgViews
-    },
-    createdAt: new Date()
-  };
+    creators[creatorId] = {
+        id: creatorId,
+        name,
+        niches,
+        portfolio: {
+            platform,
+            url,
+            followers,
+            avgViews
+        },
+        createdAt: new Date()
+    };
 
-  res.json({
-    message: "Creator profile saved",
-    creator: creators[creatorId]
-  });
+    res.json({
+        message: "Creator profile saved",
+        creator: creators[creatorId]
+    });
 });
 
 /**
  * GET CREATOR PROFILE (BRAND VIEW)
  */
 app.get("/api/creator/profile/:id", (req, res) => {
-  const creator = creators[req.params.id];
+    const creator = creators[req.params.id];
 
-  if (!creator) {
-    return res.status(404).json({ message: "Creator not found" });
-  }
+    if (!creator) {
+        return res.status(404).json({ message: "Creator not found" });
+    }
 
-  res.json(creator);
+    res.json(creator);
 });
 
 /* ===============================
    CREATE PROJECT (CREATOR)
 ================================ */
 app.post("/api/projects", (req, res) => {
-  const {
-    title,
-    description,
-    video_type,
-    funding_target,
-    allowed_expenses,
-    creatorId
-  } = req.body;
+    const {
+        title,
+        description,
+        video_type,
+        funding_target,
+        allowed_expenses,
+        creatorId
+    } = req.body;
 
-  if (!title || !funding_target || !creatorId) {
-    return res.status(400).json({ message: "Missing fields" });
-  }
+    if (!title || !funding_target || !creatorId) {
+        return res.status(400).json({ message: "Missing fields" });
+    }
 
-  const creator = creators[creatorId];
+    const creator = creators[creatorId];
 
-  const project = {
-    id: Date.now().toString(),
-    title,
-    description: description || "",
-    video_type: video_type || "general",
-    funding_target: Number(funding_target),
-    allowed_expenses: allowed_expenses || [],
-    status: "funding",
-    created_at: new Date(),
-    creator: creator || { id: creatorId, name: "Unknown", niches: [] }
-  };
+    const project = {
+        id: Date.now().toString(),
+        title,
+        description: description || "",
+        video_type: video_type || "general",
+        funding_target: Number(funding_target),
+        allowed_expenses: allowed_expenses || [],
+        status: "funding",
+        created_at: new Date(),
+        creator: creator || { id: creatorId, name: "Unknown", niches: [] }
+    };
 
-  projects[project.id] = project;
-  contributions[project.id] = [];
+    projects[project.id] = project;
+    contributions[project.id] = [];
 
-  res.status(201).json(project);
+    res.status(201).json(project);
 });
 
 /* ===============================
    LIST PROJECTS (INVESTOR)
 ================================ */
 app.get("/api/projects", (req, res) => {
-  res.json(Object.values(projects));
+    res.json(Object.values(projects));
 });
 
 /* ===============================
    INVESTOR: CONTRIBUTE
 ================================ */
 app.post("/api/contribute", (req, res) => {
-  const { project_id, amount } = req.body;
+    const { project_id, amount } = req.body;
 
-  if (!projects[project_id]) {
-    return res.status(404).json({ message: "Project not found" });
-  }
+    if (!projects[project_id]) {
+        return res.status(404).json({ message: "Project not found" });
+    }
 
-  contributions[project_id].push({
-    amount: Number(amount),
-    time: new Date()
-  });
+    contributions[project_id].push({
+        amount: Number(amount),
+        time: new Date()
+    });
 
-  const totalRaised = contributions[project_id].reduce(
-    (sum, c) => sum + c.amount,
-    0
-  );
+    const totalRaised = contributions[project_id].reduce(
+        (sum, c) => sum + c.amount,
+        0
+    );
 
-  res.json({ totalRaised });
+    res.json({ totalRaised });
 });
 
 /* ===============================
    SIMULATE REVENUE (INVESTOR)
 ================================ */
 app.post("/api/simulate-revenue", (req, res) => {
-  const { project_id, revenue_amount } = req.body;
+    const { project_id, revenue_amount } = req.body;
 
-  const contribs = contributions[project_id];
-  if (!contribs || contribs.length === 0) {
-    return res.status(400).json({ message: "No contributors" });
-  }
+    const contribs = contributions[project_id];
+    if (!contribs || contribs.length === 0) {
+        return res.status(400).json({ message: "No contributors" });
+    }
 
-  const totalInvested = contribs.reduce((s, c) => s + c.amount, 0);
-  const revenue = Number(revenue_amount);
+    const totalInvested = contribs.reduce((s, c) => s + c.amount, 0);
+    const revenue = Number(revenue_amount);
 
-  payouts[project_id] = contribs.map((c, i) => ({
-    investor: `Investor ${i + 1}`,
-    invested: c.amount,
-    payout: Math.round((c.amount / totalInvested) * revenue)
-  }));
+    payouts[project_id] = contribs.map((c, i) => ({
+        investor: `Investor ${i + 1}`,
+        invested: c.amount,
+        payout: Math.round((c.amount / totalInvested) * revenue)
+    }));
 
-  res.json({ payouts: payouts[project_id] });
+    res.json({ payouts: payouts[project_id] });
 });
 
 /* ===============================
@@ -182,112 +191,112 @@ app.post("/api/simulate-revenue", (req, res) => {
  * CREATE BRAND CAMPAIGN
  */
 app.post("/api/brand/campaign", (req, res) => {
-  const {
-    brandName,
-    title,
-    description,
-    niches,        // array ["tech","ai"]
-    budget,
-    deliverables
-  } = req.body;
+    const {
+        brandName,
+        title,
+        description,
+        niches,        // array ["tech","ai"]
+        budget,
+        deliverables
+    } = req.body;
 
-  if (!brandName || !title || !niches || niches.length === 0) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
+    if (!brandName || !title || !niches || niches.length === 0) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
 
-  const campaign = {
-    id: Date.now().toString(),
-    brandName,
-    title,
-    description,
-    niches,
-    budget,
-    deliverables,
-    createdAt: new Date(),
-    applicants: []   // creators who apply
-  };
+    const campaign = {
+        id: Date.now().toString(),
+        brandName,
+        title,
+        description,
+        niches,
+        budget,
+        deliverables,
+        createdAt: new Date(),
+        applicants: []   // creators who apply
+    };
 
-  campaigns[campaign.id] = campaign;
+    campaigns[campaign.id] = campaign;
 
-  res.status(201).json(campaign);
+    res.status(201).json(campaign);
 });
 
 /* ===============================
    MATCH CAMPAIGNS FOR CREATOR
 ================================ */
 app.get("/api/campaigns/match/:creatorId", (req, res) => {
-  const creator = creators[req.params.creatorId];
+    const creator = creators[req.params.creatorId];
 
-  if (!creator) {
-    return res.json([]);
-  }
+    if (!creator) {
+        return res.json([]);
+    }
 
-  const matched = Object.values(campaigns).filter((campaign) =>
-    campaign.niches.some((niche) =>
-      creator.niches.includes(niche)
-    )
-  );
+    const matched = Object.values(campaigns).filter((campaign) =>
+        campaign.niches.some((niche) =>
+            creator.niches.includes(niche)
+        )
+    );
 
-  res.json(matched);
+    res.json(matched);
 });
 
 /**
  * CREATOR APPLIES TO CAMPAIGN
  */
 app.post("/api/campaign/apply", (req, res) => {
-  const { campaignId, creatorId } = req.body;
+    const { campaignId, creatorId } = req.body;
 
-  const campaign = campaigns[campaignId];
-  const creator = creators[creatorId];
+    const campaign = campaigns[campaignId];
+    const creator = creators[creatorId];
 
-  if (!campaign || !creator) {
-    return res.status(404).json({ message: "Campaign or Creator not found" });
-  }
+    if (!campaign || !creator) {
+        return res.status(404).json({ message: "Campaign or Creator not found" });
+    }
 
-  const alreadyApplied = campaign.applicants.find(
-    a => a.creatorId === creatorId
-  );
+    const alreadyApplied = campaign.applicants.find(
+        a => a.creatorId === creatorId
+    );
 
-  if (alreadyApplied) {
-    return res.status(400).json({ message: "Already applied" });
-  }
+    if (alreadyApplied) {
+        return res.status(400).json({ message: "Already applied" });
+    }
 
-  campaign.applicants.push({
-    creatorId,
-    name: creator.name,
-    niches: creator.niches,
-    portfolio: creator.portfolio,
-    appliedAt: new Date()
-  });
+    campaign.applicants.push({
+        creatorId,
+        name: creator.name,
+        niches: creator.niches,
+        portfolio: creator.portfolio,
+        appliedAt: new Date()
+    });
 
-  res.json({ message: "Applied successfully" });
+    res.json({ message: "Applied successfully" });
 });
 
 /**
  * BRAND VIEWS APPLICANTS
  */
 app.get("/api/brand/campaign/:id/applicants", (req, res) => {
-  const campaign = campaigns[req.params.id];
+    const campaign = campaigns[req.params.id];
 
-  if (!campaign) {
-    return res.status(404).json({ message: "Campaign not found" });
-  }
+    if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+    }
 
-  res.json(campaign.applicants);
+    res.json(campaign.applicants);
 });
 
 /* ===============================
    🤖 AI IDEAS (LOW TOKEN MODE)
 ================================ */
 app.post("/api/ai/ideas", async (req, res) => {
-  try {
-    const { query } = req.body;
+    try {
+        const { query } = req.body;
 
-    if (!query) {
-      return res.status(400).json({ message: "Query required" });
-    }
+        if (!query) {
+            return res.status(400).json({ message: "Query required" });
+        }
 
-    const prompt = `
+        const prompt = `
 Generate exactly 3 content ideas.
 
 Format:
@@ -309,40 +318,40 @@ Monetization:
 Niche: ${query}
 `;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            maxOutputTokens: 500,
-            temperature: 0.7
-          }
-        })
-      }
-    );
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        maxOutputTokens: 500,
+                        temperature: 0.7
+                    }
+                })
+            }
+        );
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (!data.candidates) {
-      return res.status(500).json({ message: "AI returned no output" });
+        if (!data.candidates) {
+            return res.status(500).json({ message: "AI returned no output" });
+        }
+
+        res.json({
+            ai_output: data.candidates[0].content.parts[0].text
+        });
+
+    } catch (error) {
+        console.error("Gemini error:", error.message);
+        res.status(500).json({ message: "AI generation failed" });
     }
-
-    res.json({
-      ai_output: data.candidates[0].content.parts[0].text
-    });
-
-  } catch (error) {
-    console.error("Gemini error:", error.message);
-    res.status(500).json({ message: "AI generation failed" });
-  }
 });
 
 /* ===============================
    START SERVER
 ================================ */
 app.listen(5000, () => {
-  console.log("Backend running on http://localhost:5000");
+    console.log("Backend running on http://localhost:5000");
 });
