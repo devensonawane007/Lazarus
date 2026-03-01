@@ -114,11 +114,4 @@ Copy code
 
 ---
 
-### ✅ Next Steps (do this now)
-1. Create or open `README.md`
-2. Paste this content
-3. Commit & push:
-```bash
-git add README.md
-git commit -m "Added project README"
-git pushfirst pushgit add README.md
+
