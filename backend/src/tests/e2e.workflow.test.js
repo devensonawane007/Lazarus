@@ -127,7 +127,7 @@ async function runE2EVerification() {
         title: `AI Tool Sponsorship Q4 #${testId}`,
         description: "Sponsor tech creator video reviewing developer tools.",
         budget: 75000,
-        requiredNiches: ["tech", "ai"],
+        niches: ["tech", "ai"],
         deliverables: "1x 60s Integration + 2x Social Posts",
         status: "OPEN"
       }
@@ -140,7 +140,7 @@ async function runE2EVerification() {
         campaignId: campaign.id,
         creatorProfileId: creatorUser.creatorProfile.id,
         pitch: "I have high audience engagement in tech and AI niches.",
-        status: "PENDING"
+        status: "APPLIED"
       }
     });
     console.log(`✅ Creator application submitted (App ID: ${application.id}, Status: ${application.status})`);
