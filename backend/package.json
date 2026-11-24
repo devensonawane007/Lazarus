@@ -1,0 +1,37 @@
+{
+  "name": "lazarus-backend",
+  "version": "3.0.0",
+  "description": "Lazarus V3 Backend — Creator Studio & Opportunity Network",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "node src/services/escrow.service.test.js && node src/middleware/auth.middleware.test.js && node src/tests/auth.rbac.idor.test.js && node src/tests/e2e.workflow.test.js && node src/tests/v3.platform.test.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "keywords": [
+    "creator-economy",
+    "escrow",
+    "gemini",
+    "brand-campaigns"
+  ],
+  "author": "Deven Sonawane",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  },
+  "type": "commonjs"
+}
