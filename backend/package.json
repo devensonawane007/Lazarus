@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
+    "test": "node src/services/escrow.service.test.js && node src/middleware/auth.middleware.test.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev"
