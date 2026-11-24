@@ -23,7 +23,12 @@ import {
   Tv,
   Check,
   Clock,
-  RotateCw
+  RotateCw,
+  FolderOpen,
+  Calendar,
+  Play,
+  Sliders,
+  CheckCheck
 } from "lucide-react";
 import {
   AreaChart,
@@ -34,8 +39,8 @@ import {
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
 
-// Illustrative preview data for Chapter 3
-const STUDIO_CHART_DATA = [
+// Illustrative preview dataset for Chapter 3
+const STUDIO_GROWTH_DATA = [
   { day: "Day 1", reach: 41200, views: 16400 },
   { day: "Day 6", reach: 42800, views: 21900 },
   { day: "Day 12", reach: 44100, views: 27800 },
@@ -50,37 +55,49 @@ export default function InteractiveScrollStory() {
   const isDark = theme === "dark";
 
   const [activeChapter, setActiveChapter] = useState(1);
-  const [activeCollabStep, setActiveCollabStep] = useState(6); // Default on Stage 6 (Revisions) to show rich review
+  const [activeWorkflowStage, setActiveWorkflowStage] = useState(6); // Default on Stage 6 (Revision)
+  const [radialProgress, setRadialProgress] = useState(0);
 
-  // Refs for each chapter narrative block
-  const chapter1Ref = useRef(null);
-  const chapter2Ref = useRef(null);
-  const chapter3Ref = useRef(null);
-  const chapter4Ref = useRef(null);
-  const chapter5Ref = useRef(null);
-  const chapter6Ref = useRef(null);
+  // Chapter narrative container refs for intersection observing
+  const ch1Ref = useRef(null);
+  const ch2Ref = useRef(null);
+  const ch3Ref = useRef(null);
+  const ch4Ref = useRef(null);
+  const ch5Ref = useRef(null);
+  const ch6Ref = useRef(null);
 
-  // Setup IntersectionObserver to detect which chapter is currently in focus
+  // Trigger radial gauge count-up when Chapter 4 becomes active
   useEffect(() => {
-    const chapterRefs = [
-      { id: 1, ref: chapter1Ref },
-      { id: 2, ref: chapter2Ref },
-      { id: 3, ref: chapter3Ref },
-      { id: 4, ref: chapter4Ref },
-      { id: 5, ref: chapter5Ref },
-      { id: 6, ref: chapter6Ref }
+    if (activeChapter === 4) {
+      setRadialProgress(0);
+      const timer = setTimeout(() => {
+        setRadialProgress(96);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [activeChapter]);
+
+  // Setup robust IntersectionObserver to detect the active chapter naturally
+  useEffect(() => {
+    const chapterMap = [
+      { id: 1, ref: ch1Ref },
+      { id: 2, ref: ch2Ref },
+      { id: 3, ref: ch3Ref },
+      { id: 4, ref: ch4Ref },
+      { id: 5, ref: ch5Ref },
+      { id: 6, ref: ch6Ref }
     ];
 
     const observerOptions = {
       root: null,
-      rootMargin: "-25% 0px -40% 0px", // Trigger when chapter is comfortably centered
-      threshold: [0, 0.25, 0.5]
+      rootMargin: "-20% 0px -35% 0px", // Trigger when narrative is comfortably in center viewport
+      threshold: [0.1, 0.3, 0.6]
     };
 
     const handleIntersect = (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          const match = chapterRefs.find((c) => c.ref.current === entry.target);
+          const match = chapterMap.find((c) => c.ref.current === entry.target);
           if (match) {
             setActiveChapter(match.id);
           }
@@ -90,7 +107,7 @@ export default function InteractiveScrollStory() {
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
 
-    chapterRefs.forEach(({ ref }) => {
+    chapterMap.forEach(({ ref }) => {
       if (ref.current) {
         observer.observe(ref.current);
       }
@@ -101,762 +118,1061 @@ export default function InteractiveScrollStory() {
     };
   }, []);
 
-  const scrollToChapter = (chapterNum) => {
-    setActiveChapter(chapterNum);
+  const scrollToChapter = (num) => {
+    setActiveChapter(num);
     const targetMap = {
-      1: chapter1Ref,
-      2: chapter2Ref,
-      3: chapter3Ref,
-      4: chapter4Ref,
-      5: chapter5Ref,
-      6: chapter6Ref
+      1: ch1Ref,
+      2: ch2Ref,
+      3: ch3Ref,
+      4: ch4Ref,
+      5: ch5Ref,
+      6: ch6Ref
     };
-    const target = targetMap[chapterNum];
+    const target = targetMap[num];
     if (target && target.current) {
       target.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
-  // Render individual preview canvases based on chapter
-  const renderPreviewCanvas = (chapter) => {
-    switch (chapter) {
-      case 1:
-        return (
-          <div style={{ position: "relative", minHeight: "440px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            {/* Warning callout */}
+  // =========================================================
+  // SCENE RENDERERS (Each chapter has a dedicated composition)
+  // =========================================================
+
+  // Scene 1: Fragmented Ecosystem (Chaotic, floating, unorganized tools)
+  const renderScene1 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Top Banner Alert */}
+      <div
+        style={{
+          backgroundColor: isDark ? "rgba(239, 68, 68, 0.12)" : "rgba(220, 38, 38, 0.08)",
+          border: "1px solid rgba(239, 68, 68, 0.28)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexShrink: 0
+        }}
+      >
+        <AlertTriangle size={18} style={{ color: "var(--color-red)", flexShrink: 0 }} />
+        <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+          <strong style={{ color: "var(--text-primary)" }}>Status Quo Friction:</strong> Scattered across 6+ tabs with zero verified connection.
+        </div>
+      </div>
+
+      {/* Scattered Multi-Card Canvas Area */}
+      <div style={{ position: "relative", flex: 1, minHeight: "360px", margin: "16px 0" }}>
+        {/* Element 1: Stale PDF Media Kit */}
+        <div
+          className="animate-float-1"
+          style={{
+            position: "absolute",
+            top: "8px",
+            left: "12px",
+            width: "210px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            boxShadow: "var(--shadow-md)",
+            transform: "rotate(-3.5deg)"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <FileText size={14} style={{ color: "var(--color-amber)" }} />
+              <span style={{ fontSize: "11px", fontWeight: "700" }}>MediaKit_2023.pdf</span>
+            </div>
+            <span className="badge badge-amber" style={{ fontSize: "9px" }}>Stale (9m)</span>
+          </div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+            Followers: ~40,000 (manual text)<br />
+            Avg Views: 15k (unverified claim)
+          </div>
+        </div>
+
+        {/* Element 2: Unstructured Brand DM */}
+        <div
+          className="animate-float-2"
+          style={{
+            position: "absolute",
+            top: "24px",
+            right: "12px",
+            width: "215px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            boxShadow: "var(--shadow-md)",
+            transform: "rotate(2.5deg)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+            <MessageSquare size={14} style={{ color: "var(--color-blue)" }} />
+            <span style={{ fontSize: "11px", fontWeight: "700" }}>Direct Message</span>
+          </div>
+          <p style={{ fontSize: "10px", color: "var(--text-secondary)", fontStyle: "italic", margin: 0, lineHeight: 1.3 }}>
+            "Hey Alex! Do you take sponsors? Send your commercial rate deck to our generic Gmail inbox ASAP."
+          </p>
+        </div>
+
+        {/* Element 3: Isolated YouTube Studio Tab */}
+        <div
+          className="animate-float-1"
+          style={{
+            position: "absolute",
+            top: "140px",
+            left: "20px",
+            width: "200px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            boxShadow: "var(--shadow-md)",
+            transform: "rotate(1.8deg)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <Video size={14} style={{ color: "var(--color-red)" }} />
+            <span style={{ fontSize: "11px", fontWeight: "700" }}>YouTube Studio</span>
+          </div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+            Siloed metrics • No combined cross-platform audience reach
+          </div>
+        </div>
+
+        {/* Element 4: Manual Deal Spreadsheet Invoice */}
+        <div
+          className="animate-float-2"
+          style={{
+            position: "absolute",
+            top: "160px",
+            right: "18px",
+            width: "220px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            boxShadow: "var(--shadow-md)",
+            transform: "rotate(-2deg)"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <DollarSign size={14} style={{ color: "var(--color-red)" }} />
+              <span style={{ fontSize: "11px", fontWeight: "700" }}>Invoice #04</span>
+            </div>
+            <span className="badge badge-red" style={{ fontSize: "9px" }}>45 Days Late</span>
+          </div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+            ₹45,000 pending • Proof of deliverable lost in email thread
+          </div>
+        </div>
+
+        {/* Element 5: Calendar Reminder */}
+        <div
+          className="animate-float-1"
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            left: "35px",
+            width: "190px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            boxShadow: "var(--shadow-sm)",
+            transform: "rotate(-1.5deg)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <Calendar size={13} style={{ color: "var(--color-purple)" }} />
+            <span style={{ fontSize: "10px", fontWeight: "700" }}>Sponsor Deadline</span>
+          </div>
+          <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>
+            Draft due tomorrow • Contract signed via email?
+          </div>
+        </div>
+
+        {/* Element 6: Disconnected Cloud Assets */}
+        <div
+          className="animate-float-2"
+          style={{
+            position: "absolute",
+            bottom: "12px",
+            right: "30px",
+            width: "190px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            boxShadow: "var(--shadow-sm)",
+            transform: "rotate(2deg)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <FolderOpen size={13} style={{ color: "var(--brand-primary)" }} />
+            <span style={{ fontSize: "10px", fontWeight: "700" }}>Drive Assets</span>
+          </div>
+          <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>
+            120GB raw video clips • No asset review loop
+          </div>
+        </div>
+      </div>
+
+      {/* Illustrative Scenario Footnote */}
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface-raised)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexShrink: 0
+        }}
+      >
+        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>
+          Illustrative creator-workflow scenario
+        </span>
+        <button
+          onClick={() => scrollToChapter(2)}
+          className="btn-ghost"
+          style={{ padding: "4px 8px", fontSize: "11px", color: "var(--brand-primary)" }}
+        >
+          Scroll to converge →
+        </button>
+      </div>
+    </div>
+  );
+
+  // Scene 2: Connect the Ecosystem (The Central Lazarus Integration Nexus)
+  const renderScene2 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Top Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div>
+          <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)" }}>
+            Lazarus Integration Nexus
+          </h4>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+            Official platform connectors streaming into one encrypted pipeline
+          </span>
+        </div>
+        <span className="badge badge-green">Topology Active</span>
+      </div>
+
+      {/* Central SVG Network Topology Diagram */}
+      <div style={{ position: "relative", flex: 1, minHeight: "360px", margin: "10px 0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* SVG Bezier Connection Lines */}
+        <svg
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+          viewBox="0 0 500 360"
+        >
+          {/* Curve from YouTube (top-left) to Center (250, 180) */}
+          <path
+            d="M 120 70 Q 180 130 250 180"
+            fill="none"
+            stroke="var(--color-red)"
+            strokeWidth="2.5"
+            strokeOpacity="0.6"
+            className="svg-data-path"
+          />
+          {/* Curve from Instagram (top-right) to Center */}
+          <path
+            d="M 380 70 Q 320 130 250 180"
+            fill="none"
+            stroke="var(--color-blue)"
+            strokeWidth="2.5"
+            strokeOpacity="0.6"
+            className="svg-data-path"
+          />
+          {/* Curve from Twitch (bottom) to Center */}
+          <path
+            d="M 250 310 Q 250 250 250 180"
+            fill="none"
+            stroke="var(--color-purple)"
+            strokeWidth="2.5"
+            strokeOpacity="0.6"
+            className="svg-data-path"
+          />
+        </svg>
+
+        {/* Central Lazarus Hub Node */}
+        <div
+          className="animate-pulse-hub"
+          style={{
+            position: "absolute",
+            width: "124px",
+            height: "124px",
+            borderRadius: "50%",
+            backgroundColor: "var(--bg-surface)",
+            border: "2px solid var(--brand-primary)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            boxShadow: "0 0 24px var(--brand-glow)"
+          }}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              backgroundColor: "var(--brand-primary)",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "4px"
+            }}
+          >
+            <Sparkles size={18} />
+          </div>
+          <span style={{ fontSize: "11px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+            LAZARUS HUB
+          </span>
+          <span style={{ fontSize: "9px", color: "var(--brand-primary)", fontWeight: "700" }}>
+            PIPELINE READY
+          </span>
+        </div>
+
+        {/* Node 1: YouTube Card (Top-Left) */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "15px",
+            width: "175px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            boxShadow: "var(--shadow-md)",
+            zIndex: 5
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Video size={15} style={{ color: "var(--color-red)" }} />
+              <strong style={{ fontSize: "11px" }}>YouTube API</strong>
+            </div>
+            <span className="badge badge-green" style={{ fontSize: "8px" }}>Active</span>
+          </div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+            Google OAuth 2.0 • 48.5K Subs
+          </div>
+        </div>
+
+        {/* Node 2: Instagram Meta Graph Card (Top-Right) */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "15px",
+            width: "175px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            boxShadow: "var(--shadow-md)",
+            zIndex: 5
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Film size={15} style={{ color: "var(--color-blue)" }} />
+              <strong style={{ fontSize: "11px" }}>Instagram Meta</strong>
+            </div>
+            <span className="badge badge-amber" style={{ fontSize: "8px" }}>In Review</span>
+          </div>
+          <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>
+            Sandbox mode active for test users
+          </div>
+        </div>
+
+        {/* Node 3: Twitch Helix Card (Bottom) */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "15px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "190px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            boxShadow: "var(--shadow-md)",
+            zIndex: 5
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Tv size={15} style={{ color: "var(--color-purple)" }} />
+              <strong style={{ fontSize: "11px" }}>Twitch Helix API</strong>
+            </div>
+            <span className="badge badge-purple" style={{ fontSize: "8px" }}>Connected</span>
+          </div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", textAlign: "center" }}>
+            Broadcaster VOD metrics synced
+          </div>
+        </div>
+      </div>
+
+      {/* Encryption & Disclosure Notice */}
+      <div
+        style={{
+          backgroundColor: isDark ? "rgba(16, 185, 129, 0.08)" : "rgba(5, 150, 105, 0.06)",
+          border: "1px solid rgba(16, 185, 129, 0.25)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexShrink: 0
+        }}
+      >
+        <Lock size={16} style={{ color: "var(--brand-primary)", flexShrink: 0 }} />
+        <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.35 }}>
+          <strong>AES-256-GCM Vault Isolation:</strong> Tokens encrypted server-side with hardware-randomized 96-bit IVs. <em>Illustrative connector topology.</em>
+        </p>
+      </div>
+    </div>
+  );
+
+  // Scene 3: Creator Studio (The Intelligence Dashboard)
+  const renderScene3 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Studio Header Bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--color-blue) 100%)",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "800",
+              fontSize: "13px"
+            }}
+          >
+            AR
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>Alex Rivera</span>
+              <span className="badge badge-green" style={{ fontSize: "9px" }}>YouTube Verified</span>
+            </div>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>@alexriveratech • Tech & AI</span>
+          </div>
+        </div>
+
+        <span className="badge badge-blue" style={{ fontSize: "10px" }}>
+          Illustrative Studio Preview
+        </span>
+      </div>
+
+      {/* 4 KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", margin: "14px 0 10px" }}>
+        <div className="stat-card" style={{ padding: "12px" }}>
+          <span className="stat-label">Verified Audience</span>
+          <div className="stat-value" style={{ fontSize: "20px" }}>48,500</div>
+          <span style={{ fontSize: "11px", color: "var(--brand-primary)", fontWeight: "700" }}>
+            +14.8% 30d Growth
+          </span>
+        </div>
+
+        <div className="stat-card" style={{ padding: "12px" }}>
+          <span className="stat-label">Engagement Rate</span>
+          <div className="stat-value" style={{ fontSize: "20px" }}>7.07%</div>
+          <span style={{ fontSize: "11px", color: "var(--color-blue)", fontWeight: "600" }}>
+            Live Ingestion Benchmark
+          </span>
+        </div>
+      </div>
+
+      {/* Growth Trend Area Chart */}
+      <div
+        style={{
+          backgroundColor: "var(--bg-subtle)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 12px",
+          border: "1px solid var(--border-subtle)",
+          marginBottom: "10px"
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+          <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)" }}>
+            Cross-Channel Reach Trajectory (30-Day Window)
+          </span>
+          <span style={{ fontSize: "10px", color: "var(--brand-primary)", fontWeight: "700" }}>
+            Verified
+          </span>
+        </div>
+        <div style={{ width: "100%", height: 85 }}>
+          <ResponsiveContainer>
+            <AreaChart data={STUDIO_GROWTH_DATA}>
+              <defs>
+                <linearGradient id="colorStory3" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={isDark ? "#10b981" : "#059669"} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={isDark ? "#10b981" : "#059669"} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="reach"
+                stroke={isDark ? "#10b981" : "#059669"}
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorStory3)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Recent Content Showcase Snippet */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+        <div
+          style={{
+            backgroundColor: "var(--bg-surface-raised)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-sm)",
+            padding: "8px 10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+          <Video size={16} style={{ color: "var(--color-red)", flexShrink: 0 }} />
+          <div style={{ overflow: "hidden" }}>
+            <div style={{ fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Next-Gen AI Workflows
+            </div>
+            <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>38.4K views • 8.2% CTR</div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "var(--bg-surface-raised)",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-sm)",
+            padding: "8px 10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+          <Film size={16} style={{ color: "var(--color-blue)", flexShrink: 0 }} />
+          <div style={{ overflow: "hidden" }}>
+            <div style={{ fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Full-Stack Dev in 2026
+            </div>
+            <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>46.1K views • 9.1% Eng</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Media Kit Bar */}
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <FileCheck2 size={16} style={{ color: "var(--brand-primary)" }} />
+          <div>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>Dynamic Media Kit Active</span>
+            <span style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "8px", fontFamily: "var(--font-mono)" }}>
+              lazarus.app/kit/alexrivera
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate("/kit/alexrivera")}
+          className="btn-ghost"
+          style={{ fontSize: "11px", padding: "4px 8px", display: "flex", alignItems: "center", gap: "4px" }}
+        >
+          <span>Preview</span> <ExternalLink size={12} />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Scene 4: Opportunity Matching (The Match Engine & Transparent Rationale)
+  const renderScene4 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Opportunity Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div>
+          <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--color-blue)", letterSpacing: "0.04em" }}>
+            EXPLAINABLE OPPORTUNITY ENGINE
+          </span>
+          <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+            Matched Campaign Brief
+          </h4>
+        </div>
+        <span className="badge badge-green">High Compatibility</span>
+      </div>
+
+      {/* Centerpiece: Split Card with Radial Compatibility Gauge */}
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface-raised)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-lg)",
+          padding: "16px",
+          margin: "12px 0"
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+          <div>
+            <span className="badge badge-purple" style={{ fontSize: "10px", marginBottom: "4px" }}>
+              ENTERPRISE SPONSORSHIP
+            </span>
+            <h5 style={{ fontSize: "15px", fontWeight: "800", color: "var(--text-primary)", margin: "2px 0" }}>
+              AI Developer Copilot Q4 Review
+            </h5>
+            <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+              Sponsor: <strong>Nexus AI Cloud</strong> • Budget: ₹85,000 (Milestone Escrow)
+            </span>
+          </div>
+
+          {/* Animated Radial SVG Match Gauge */}
+          <div style={{ position: "relative", width: "72px", height: "72px", flexShrink: 0 }}>
+            <svg style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }} viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke="var(--border-subtle)"
+                strokeWidth="8"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke="var(--brand-primary)"
+                strokeWidth="8"
+                strokeDasharray="251.2"
+                strokeDashoffset={251.2 - (251.2 * (radialProgress || 96)) / 100}
+                strokeLinecap="round"
+                className="gauge-progress-ring"
+              />
+            </svg>
             <div
               style={{
-                backgroundColor: isDark ? "rgba(239, 68, 68, 0.12)" : "rgba(220, 38, 38, 0.08)",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                borderRadius: "var(--radius-md)",
-                padding: "12px 16px",
+                position: "absolute",
+                inset: 0,
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: "10px",
-                marginBottom: "20px"
+                justifyContent: "center"
               }}
             >
-              <AlertTriangle size={18} style={{ color: "var(--color-red)", flexShrink: 0 }} />
-              <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                <strong style={{ color: "var(--text-primary)" }}>Status Quo:</strong> 5+ disconnected tools, unverified PDF decks, lost brand emails.
-              </div>
-            </div>
-
-            {/* Scattered Cards Area */}
-            <div style={{ position: "relative", height: "300px", width: "100%" }}>
-              {/* Card 1: Static PDF */}
-              <div
-                className="animate-float-1"
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  left: "15px",
-                  width: "220px",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "14px",
-                  boxShadow: "var(--shadow-md)"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <FileText size={14} style={{ color: "var(--color-amber)" }} />
-                    <span style={{ fontSize: "11px", fontWeight: "700" }}>MediaKit_2023.pdf</span>
-                  </div>
-                  <span className="badge badge-amber" style={{ fontSize: "9px" }}>Stale Data</span>
-                </div>
-                <div style={{ fontSize: "10px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                  Followers: ~40k (estimate)<br />
-                  Avg Views: 15k (unverified)
-                </div>
-              </div>
-
-              {/* Card 2: Cluttered DM */}
-              <div
-                className="animate-float-2"
-                style={{
-                  position: "absolute",
-                  top: "50px",
-                  right: "15px",
-                  width: "210px",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "14px",
-                  boxShadow: "var(--shadow-md)"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                  <MessageSquare size={14} style={{ color: "var(--color-blue)" }} />
-                  <span style={{ fontSize: "11px", fontWeight: "700" }}>Brand DM (Twitter/X)</span>
-                </div>
-                <p style={{ fontSize: "10px", color: "var(--text-secondary)", fontStyle: "italic", margin: 0 }}>
-                  "Hey Alex! Love your videos. Are you open for a sponsor brief? Email us your rates ASAP."
-                </p>
-              </div>
-
-              {/* Card 3: Siloed YouTube */}
-              <div
-                className="animate-float-1"
-                style={{
-                  position: "absolute",
-                  bottom: "35px",
-                  left: "25px",
-                  width: "200px",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "14px",
-                  boxShadow: "var(--shadow-md)"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                  <Video size={14} style={{ color: "var(--color-red)" }} />
-                  <span style={{ fontSize: "11px", fontWeight: "700" }}>YouTube Studio</span>
-                </div>
-                <div style={{ fontSize: "10px", color: "var(--text-secondary)" }}>
-                  Siloed analytics • No combined cross-platform metrics
-                </div>
-              </div>
-
-              {/* Card 4: Overdue Invoice */}
-              <div
-                className="animate-float-2"
-                style={{
-                  position: "absolute",
-                  bottom: "15px",
-                  right: "25px",
-                  width: "210px",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "14px",
-                  boxShadow: "var(--shadow-md)"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <DollarSign size={14} style={{ color: "var(--color-red)" }} />
-                    <span style={{ fontSize: "11px", fontWeight: "700" }}>Invoice #04</span>
-                  </div>
-                  <span className="badge badge-red" style={{ fontSize: "9px" }}>45 Days Late</span>
-                </div>
-                <div style={{ fontSize: "10px", color: "var(--text-secondary)" }}>
-                  ₹45,000 pending • Proof of post lost in email thread
-                </div>
-              </div>
-            </div>
-
-            {/* Convergence Prompt */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "12px 16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>
-                Ready to converge these silos?
+              <span style={{ fontSize: "17px", fontWeight: "800", color: "var(--brand-primary)", lineHeight: 1 }}>
+                {radialProgress || 96}%
               </span>
-              <button
-                onClick={() => scrollToChapter(2)}
-                className="btn-ghost"
-                style={{ padding: "4px 10px", fontSize: "12px", color: "var(--brand-primary)" }}
-              >
-                Scroll to Connect →
-              </button>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {/* Header info */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)" }}>
-                  Connected Account Vault
-                </h4>
-                <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: 0 }}>
-                  Official API contracts authenticated via OAuth 2.0
-                </p>
-              </div>
-              <span className="badge badge-green">3 Providers Ready</span>
-            </div>
-
-            {/* Provider 1: YouTube */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "14px 16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "8px",
-                    backgroundColor: "rgba(239, 68, 68, 0.12)",
-                    color: "var(--color-red)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Video size={20} />
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <strong style={{ fontSize: "14px", color: "var(--text-primary)" }}>YouTube Data API v3</strong>
-                    <span className="badge badge-green" style={{ fontSize: "10px" }}>Connected</span>
-                  </div>
-                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                    @alexriveratech • 48,500 Subscribers (Daily Sync)
-                  </span>
-                </div>
-              </div>
-              <CheckCircle2 size={18} style={{ color: "var(--brand-primary)" }} />
-            </div>
-
-            {/* Provider 2: Instagram (Accurate sandbox/review disclosure) */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "14px 16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "8px",
-                    backgroundColor: "rgba(56, 189, 248, 0.12)",
-                    color: "var(--color-blue)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Film size={20} />
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <strong style={{ fontSize: "14px", color: "var(--text-primary)" }}>Instagram Meta Graph API</strong>
-                    <span className="badge badge-amber" style={{ fontSize: "10px" }}>Pending App Review</span>
-                  </div>
-                  <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                    Sandbox access active for test testers • Production review submitted
-                  </span>
-                </div>
-              </div>
-              <Clock size={18} style={{ color: "var(--color-amber)" }} />
-            </div>
-
-            {/* Provider 3: Twitch */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "14px 16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "8px",
-                    backgroundColor: "rgba(168, 85, 247, 0.12)",
-                    color: "var(--color-purple)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Tv size={20} />
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <strong style={{ fontSize: "14px", color: "var(--text-primary)" }}>Twitch Helix API</strong>
-                    <span className="badge badge-purple" style={{ fontSize: "10px" }}>Connected</span>
-                  </div>
-                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                    alexrivera_live • 8,420 Followers • VOD Stats Synced
-                  </span>
-                </div>
-              </div>
-              <CheckCircle2 size={18} style={{ color: "var(--color-purple)" }} />
-            </div>
-
-            {/* Encryption Guarantee Notice */}
-            <div
-              style={{
-                backgroundColor: isDark ? "rgba(16, 185, 129, 0.08)" : "rgba(5, 150, 105, 0.06)",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
-                borderRadius: "var(--radius-md)",
-                padding: "12px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px"
-              }}
-            >
-              <Lock size={16} style={{ color: "var(--brand-primary)", flexShrink: 0 }} />
-              <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.4 }}>
-                <strong>AES-256-GCM Token Encryption:</strong> Access tokens are encrypted with authenticated ciphers and hardware-randomized 96-bit IVs. Plaintext tokens never hit the browser.
-              </p>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* Header with Illustrative Preview Badge */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
-                  Alex Rivera Studio
-                </span>
-                <span className="badge badge-blue">Illustrative Studio Preview</span>
-              </div>
-              <span style={{ fontSize: "11px", color: "var(--brand-primary)", fontWeight: "700" }}>
-                Live Ingestion Sync
+              <span style={{ fontSize: "8px", fontWeight: "700", color: "var(--text-muted)" }}>
+                MATCH
               </span>
             </div>
-
-            {/* 4 Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <div className="stat-card" style={{ padding: "12px" }}>
-                <span className="stat-label">Verified Audience</span>
-                <div className="stat-value" style={{ fontSize: "18px" }}>48,500</div>
-                <span style={{ fontSize: "11px", color: "var(--brand-primary)", fontWeight: "600" }}>
-                  +14.8% 30d Growth
-                </span>
-              </div>
-
-              <div className="stat-card" style={{ padding: "12px" }}>
-                <span className="stat-label">Engagement Benchmark</span>
-                <div className="stat-value" style={{ fontSize: "18px" }}>7.07%</div>
-                <span style={{ fontSize: "11px", color: "var(--color-blue)", fontWeight: "600" }}>
-                  Top 5% in AI Niche
-                </span>
-              </div>
-            </div>
-
-            {/* Growth Graph */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "12px",
-                border: "1px solid var(--border-subtle)"
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)" }}>
-                  Cross-Platform Audience Trajectory
-                </span>
-                <span style={{ fontSize: "11px", color: "var(--brand-primary)", fontWeight: "700" }}>
-                  Verified
-                </span>
-              </div>
-              <div style={{ width: "100%", height: 100 }}>
-                <ResponsiveContainer>
-                  <AreaChart data={STUDIO_CHART_DATA}>
-                    <defs>
-                      <linearGradient id="colorReachStory" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={isDark ? "#10b981" : "#059669"} stopOpacity={0.4} />
-                        <stop offset="95%" stopColor={isDark ? "#10b981" : "#059669"} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <Area
-                      type="monotone"
-                      dataKey="reach"
-                      stroke={isDark ? "#10b981" : "#059669"}
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorReachStory)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Auto Media Kit Showcase */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "12px 14px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <FileCheck2 size={15} style={{ color: "var(--brand-primary)" }} />
-                  <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>
-                    Dynamic Media Kit Active
-                  </span>
-                </div>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                  lazarus.app/kit/alexrivera
-                </span>
-              </div>
-
-              <button
-                onClick={() => navigate("/kit/alexrivera")}
-                className="btn-ghost"
-                style={{ fontSize: "11px", padding: "4px 10px", display: "flex", alignItems: "center", gap: "4px" }}
-              >
-                <span>Preview</span> <ExternalLink size={12} />
-              </button>
-            </div>
           </div>
-        );
+        </div>
 
-      case 4:
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--color-blue)", letterSpacing: "0.04em" }}>
-                OPPORTUNITY ENGINE RECOMMENDATION
-              </span>
-              <span className="badge badge-green">High Fit</span>
-            </div>
-
-            {/* Campaign Detail Card */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-lg)",
-                padding: "16px"
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                <div>
-                  <h4 style={{ fontSize: "15px", fontWeight: "800", color: "var(--text-primary)" }}>
-                    AI Developer Copilot Q4 Sponsorship
-                  </h4>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                    Sponsor: <strong>Nexus AI Cloud</strong> • Verified Tech Enterprise
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "24px", fontWeight: "800", color: "var(--brand-primary)", lineHeight: 1 }}>
-                    98%
-                  </div>
-                  <span style={{ fontSize: "9px", fontWeight: "700", color: "var(--text-muted)" }}>
-                    MATCH SCORE
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "16px", marginBottom: "14px", flexWrap: "wrap" }}>
-                <span className="badge badge-purple" style={{ fontSize: "11px" }}>
-                  Budget: ₹85,000
-                </span>
-                <span className="badge badge-blue" style={{ fontSize: "11px" }}>
-                  1x Dedicated Video + 1x Short
-                </span>
-                <span className="badge badge-green" style={{ fontSize: "11px" }}>
-                  Escrow Guaranteed
-                </span>
-              </div>
-
-              {/* Explainable Match Breakdown */}
-              <div
-                style={{
-                  backgroundColor: "var(--bg-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "12px",
-                  border: "1px solid var(--border-subtle)"
-                }}
-              >
-                <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "8px" }}>
-                  EXPLAINABLE MATCH SCORE BREAKDOWN:
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                    <span style={{ color: "var(--text-secondary)" }}>• Tech & AI Niche Alignment:</span>
-                    <strong style={{ color: "var(--brand-primary)" }}>+40% (Exact match)</strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                    <span style={{ color: "var(--text-secondary)" }}>• Connected YouTube Channel Presence:</span>
-                    <strong style={{ color: "var(--brand-primary)" }}>+30% (Verified 48.5K)</strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                    <span style={{ color: "var(--text-secondary)" }}>• Engagement Threshold (7.07% vs 4.5% min):</span>
-                    <strong style={{ color: "var(--brand-primary)" }}>+15% (Surpassed)</strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                    <span style={{ color: "var(--text-secondary)" }}>• Deliverable History Reliability:</span>
-                    <strong style={{ color: "var(--brand-primary)" }}>+13% (100% on-time)</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Rationale Quote */}
-              <p
-                style={{
-                  fontSize: "11px",
-                  color: "var(--text-muted)",
-                  fontStyle: "italic",
-                  marginTop: "12px",
-                  lineHeight: 1.4,
-                  margin: "12px 0 0"
-                }}
-              >
-                "Why this matches: You create verified deep-dive coding tutorials, and Nexus AI requires authentic developer-led tool reviews."
-              </p>
-            </div>
+        {/* 4 Dimension Compatibility Breakdown Bars */}
+        <div
+          style={{
+            backgroundColor: "var(--bg-subtle)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            border: "1px solid var(--border-subtle)"
+          }}
+        >
+          <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "8px" }}>
+            EXPLAINABLE MATCHING DIMENSIONS:
           </div>
-        );
 
-      case 5:
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
-                  Active Collaboration Workspace
-                </h4>
-                <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                  Nexus AI Copilot • Deliverable #1
-                </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {/* Dimension 1 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", marginBottom: "2px" }}>
+                <span style={{ color: "var(--text-secondary)" }}>• Tech & AI Niche Alignment</span>
+                <strong style={{ color: "var(--brand-primary)" }}>100% Fit (+40%)</strong>
               </div>
-              <span className="badge badge-amber">Stage 6: Revisions</span>
+              <div style={{ width: "100%", height: "5px", backgroundColor: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "100%", backgroundColor: "var(--brand-primary)" }} />
+              </div>
             </div>
 
-            {/* 8-Stage Interactive Mini-Lifecycle */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "6px",
-                backgroundColor: "var(--bg-subtle)",
-                padding: "8px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-subtle)"
-              }}
-            >
-              {[
-                { id: 1, name: "1. Applied" },
-                { id: 2, name: "2. Shortlist" },
-                { id: 3, name: "3. Terms" },
-                { id: 4, name: "4. Agreement" },
-                { id: 5, name: "5. Submitted" },
-                { id: 6, name: "6. Revisions" },
-                { id: 7, name: "7. Approved" },
-                { id: 8, name: "8. Completed" }
-              ].map((step) => {
-                const isActive = activeCollabStep === step.id;
-                const isPassed = step.id < activeCollabStep;
-                return (
-                  <button
-                    key={step.id}
-                    onClick={() => setActiveCollabStep(step.id)}
-                    style={{
-                      padding: "4px 2px",
-                      borderRadius: "4px",
-                      fontSize: "9px",
-                      fontWeight: "700",
-                      textAlign: "center",
-                      border: "none",
-                      cursor: "pointer",
-                      backgroundColor: isActive
-                        ? "var(--brand-primary)"
-                        : isPassed
-                        ? "var(--brand-light)"
-                        : "var(--bg-surface)",
-                      color: isActive
-                        ? "#ffffff"
-                        : isPassed
-                        ? "var(--brand-primary)"
-                        : "var(--text-muted)"
-                    }}
-                  >
-                    {step.name}
-                  </button>
-                );
-              })}
+            {/* Dimension 2 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", marginBottom: "2px" }}>
+                <span style={{ color: "var(--text-secondary)" }}>• Verified YouTube Channel Reach (48.5K)</span>
+                <strong style={{ color: "var(--brand-primary)" }}>95% Fit (+30%)</strong>
+              </div>
+              <div style={{ width: "100%", height: "5px", backgroundColor: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: "95%", height: "100%", backgroundColor: "var(--brand-primary)" }} />
+              </div>
             </div>
 
-            {/* Deliverable Review Card */}
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface-raised)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-md)",
-                padding: "14px"
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Video size={16} style={{ color: "var(--brand-primary)" }} />
-                  <strong style={{ fontSize: "13px", color: "var(--text-primary)" }}>
-                    Draft: "Building Full-Stack App with Nexus AI"
-                  </strong>
-                </div>
-                <span className="badge badge-purple" style={{ fontSize: "10px" }}>
-                  Unlisted YouTube
-                </span>
+            {/* Dimension 3 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", marginBottom: "2px" }}>
+                <span style={{ color: "var(--text-secondary)" }}>• Authentic Engagement (7.07% vs 4.5% min)</span>
+                <strong style={{ color: "var(--brand-primary)" }}>92% Fit (+15%)</strong>
               </div>
-
-              {/* Sponsor Feedback Note */}
-              <div
-                style={{
-                  backgroundColor: "var(--bg-surface)",
-                  borderLeft: "3px solid var(--color-amber)",
-                  padding: "10px 12px",
-                  borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
-                  fontSize: "11px",
-                  color: "var(--text-secondary)",
-                  marginBottom: "12px",
-                  lineHeight: 1.4
-                }}
-              >
-                <strong style={{ color: "var(--text-primary)" }}>Nexus AI Reviewer (Timestamp 02:45):</strong><br />
-                "The code walk-through is crisp! Please boost the microphone volume during the terminal live-coding segment before final sign-off."
+              <div style={{ width: "100%", height: "5px", backgroundColor: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: "92%", height: "100%", backgroundColor: "var(--brand-primary)" }} />
               </div>
+            </div>
 
-              {/* Escrow Guarantee Status */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px", borderTop: "1px solid var(--border-subtle)" }}>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                  Milestone Escrow: ₹85,000 Locked
-                </span>
-                <span style={{ fontSize: "11px", color: "var(--brand-primary)", fontWeight: "700" }}>
-                  Release Upon Stage 7 Approval
-                </span>
+            {/* Dimension 4 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", marginBottom: "2px" }}>
+                <span style={{ color: "var(--text-secondary)" }}>• Historical On-Time Deliverable Record</span>
+                <strong style={{ color: "var(--brand-primary)" }}>98% Fit (+11%)</strong>
+              </div>
+              <div style={{ width: "100%", height: "5px", backgroundColor: "var(--border-subtle)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: "98%", height: "100%", backgroundColor: "var(--brand-primary)" }} />
               </div>
             </div>
           </div>
-        );
+        </div>
 
-      case 6:
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", justifyContent: "center", height: "100%" }}>
-            <div style={{ textAlign: "center" }}>
-              <span className="badge badge-green" style={{ marginBottom: "10px" }}>
-                READY TO SCALE
-              </span>
-              <h4 style={{ fontSize: "18px", fontWeight: "800", color: "var(--text-primary)" }}>
-                Start Running Your Creator Business
-              </h4>
-              <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
-                Join professional creators and leading brand sponsors on Lazarus V3.
-              </p>
+        {/* Transparent Rationale Box */}
+        <p
+          style={{
+            fontSize: "11px",
+            color: "var(--text-muted)",
+            fontStyle: "italic",
+            marginTop: "10px",
+            lineHeight: 1.4,
+            margin: "10px 0 0"
+          }}
+        >
+          "Why this fits: You produce verified coding tutorials, and Nexus AI requires technical creator authority to reach software developers."
+        </p>
+      </div>
+
+      {/* Illustrative Footnote */}
+      <div style={{ fontSize: "10px", color: "var(--text-muted)", textAlign: "center", flexShrink: 0 }}>
+        Illustrative match engine demonstration • Deterministic scoring based on creator metadata
+      </div>
+    </div>
+  );
+
+  // Scene 5: Collaboration Workspace (The 9-Stage Deal Room & Deliverable Revisions)
+  const renderScene5 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Workspace Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div>
+          <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+            Collaboration Deal Room
+          </h4>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+            Nexus AI Copilot • Deliverable #1 Workflow
+          </span>
+        </div>
+        <span className="badge badge-amber">Stage 6: Revisions</span>
+      </div>
+
+      {/* 9-Stage Animated Interactive Stepper */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "4px",
+          backgroundColor: "var(--bg-subtle)",
+          padding: "8px",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-subtle)",
+          margin: "10px 0"
+        }}
+      >
+        {[
+          { id: 1, name: "1. Apply" },
+          { id: 2, name: "2. Shortlist" },
+          { id: 3, name: "3. Terms" },
+          { id: 4, name: "4. Agree" },
+          { id: 5, name: "5. In Prog" },
+          { id: 6, name: "6. Submit" },
+          { id: 7, name: "7. Revision" },
+          { id: 8, name: "8. Approve" },
+          { id: 9, name: "9. Complete" }
+        ].map((step) => {
+          const isActive = activeWorkflowStage === step.id;
+          const isPassed = step.id < activeWorkflowStage;
+          return (
+            <button
+              key={step.id}
+              onClick={() => setActiveWorkflowStage(step.id)}
+              style={{
+                padding: "4px 2px",
+                borderRadius: "4px",
+                fontSize: "9px",
+                fontWeight: "700",
+                textAlign: "center",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: isActive
+                  ? "var(--brand-primary)"
+                  : isPassed
+                  ? "var(--brand-light)"
+                  : "var(--bg-surface)",
+                color: isActive
+                  ? "#ffffff"
+                  : isPassed
+                  ? "var(--brand-primary)"
+                  : "var(--text-muted)"
+              }}
+            >
+              {step.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Deliverable Review & Revision Card */}
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface-raised)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-lg)",
+          padding: "14px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}
+      >
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Video size={16} style={{ color: "var(--brand-primary)" }} />
+              <strong style={{ fontSize: "13px", color: "var(--text-primary)" }}>
+                Draft v2: "Building Next-Gen Full-Stack Apps"
+              </strong>
             </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-              {/* Creator Card */}
-              <div
-                style={{
-                  backgroundColor: "var(--bg-surface-raised)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between"
-                }}
-              >
-                <div>
-                  <span className="badge badge-green" style={{ fontSize: "10px" }}>FOR CREATORS</span>
-                  <h5 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginTop: "8px" }}>
-                    Creator Studio
-                  </h5>
-                  <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.4 }}>
-                    Connect YouTube, Instagram & Twitch. Receive matched campaigns and guaranteed payouts.
-                  </p>
-                </div>
-                <button
-                  onClick={() => navigate("/login?role=creator&mode=register")}
-                  className="btn-primary"
-                  style={{ width: "100%", marginTop: "14px", fontSize: "12px", padding: "8px 12px" }}
-                >
-                  Join as Creator →
-                </button>
-              </div>
-
-              {/* Brand Card */}
-              <div
-                style={{
-                  backgroundColor: "var(--bg-surface-raised)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between"
-                }}
-              >
-                <div>
-                  <span className="badge badge-blue" style={{ fontSize: "10px" }}>FOR BRANDS</span>
-                  <h5 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginTop: "8px" }}>
-                    Brand Studio
-                  </h5>
-                  <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.4 }}>
-                    Deploy briefs, discover authentic creators with verified metrics, and manage 8-stage collaborations.
-                  </p>
-                </div>
-                <button
-                  onClick={() => navigate("/login?role=brand&mode=register")}
-                  className="btn-secondary"
-                  style={{ width: "100%", marginTop: "14px", fontSize: "12px", padding: "8px 12px" }}
-                >
-                  Post a Campaign →
-                </button>
-              </div>
-            </div>
-
-            {/* Trust Pill */}
-            <div style={{ display: "flex", justifyContent: "center", gap: "16px", fontSize: "11px", color: "var(--text-muted)" }}>
-              <span>✓ No credit card required</span>
-              <span>✓ AES-256-GCM Encryption</span>
-              <span>✓ Official API Verification</span>
-            </div>
+            <span className="badge badge-purple" style={{ fontSize: "9px" }}>
+              Unlisted YouTube Link
+            </span>
           </div>
-        );
 
-      default:
-        return null;
-    }
-  };
+          {/* Video Player Scrubber Mockup */}
+          <div
+            style={{
+              backgroundColor: "var(--bg-subtle)",
+              borderRadius: "var(--radius-sm)",
+              padding: "8px 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "10px"
+            }}
+          >
+            <Play size={14} style={{ color: "var(--brand-primary)" }} />
+            <div style={{ flex: 1, height: "4px", backgroundColor: "var(--border-subtle)", borderRadius: "2px", position: "relative" }}>
+              <div style={{ width: "35%", height: "100%", backgroundColor: "var(--brand-primary)" }} />
+              {/* Timestamp pin for revision */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "35%",
+                  top: "-4px",
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--color-amber)",
+                  border: "2px solid #ffffff"
+                }}
+              />
+            </div>
+            <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
+              02:45 / 12:48
+            </span>
+          </div>
+
+          {/* Sponsor Timestamped Revision Note */}
+          <div
+            style={{
+              backgroundColor: "var(--bg-surface)",
+              borderLeft: "3px solid var(--color-amber)",
+              padding: "10px 12px",
+              borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
+              fontSize: "11px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.4
+            }}
+          >
+            <strong style={{ color: "var(--text-primary)" }}>Nexus AI Brand Reviewer (Timestamp 02:45):</strong><br />
+            "The benchmark code walk-through is crisp! Please boost the microphone volume during the terminal live-coding demo (02:45 - 03:40) before final approval."
+          </div>
+        </div>
+
+        {/* Milestone Guarantee Status */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: "10px",
+            borderTop: "1px solid var(--border-subtle)",
+            marginTop: "10px"
+          }}
+        >
+          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+            Simulated Milestone: ₹85,000 Locked in State Machine
+          </span>
+          <span className="badge badge-green" style={{ fontSize: "9px" }}>
+            Release Upon Stage 8 Sign-off
+          </span>
+        </div>
+      </div>
+
+      {/* Escrow Disclaimer Footnote */}
+      <div style={{ fontSize: "10px", color: "var(--text-muted)", textAlign: "center", marginTop: "6px", flexShrink: 0 }}>
+        Simulated milestone workflow demonstration • Governed by deterministic state machine
+      </div>
+    </div>
+  );
+
+  // Scene 6: Launch (The Complete Ecosystem & Final Dual Action)
+  const renderScene6 = () => (
+    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {/* Ecosystem Title */}
+      <div style={{ textAlign: "center", flexShrink: 0 }}>
+        <span className="badge badge-green" style={{ marginBottom: "6px", fontSize: "10px" }}>
+          THE COMPLETE PLATFORM
+        </span>
+        <h4 style={{ fontSize: "17px", fontWeight: "800", color: "var(--text-primary)", margin: "2px 0" }}>
+          Lazarus Creator OS In Full Motion
+        </h4>
+        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+          Four interconnected engines transforming your creative business
+        </span>
+      </div>
+
+      {/* 4 Connected Engine Mini-Tiles */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", margin: "10px 0" }}>
+        <div style={{ backgroundColor: "var(--bg-surface-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <TrendingUp size={14} style={{ color: "var(--brand-primary)" }} />
+            <strong style={{ fontSize: "12px" }}>Creator Studio</strong>
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Unified live analytics & dynamic media kits</span>
+        </div>
+
+        <div style={{ backgroundColor: "var(--bg-surface-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <Target size={14} style={{ color: "var(--color-blue)" }} />
+            <strong style={{ fontSize: "12px" }}>Opportunity Engine</strong>
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Deterministic compatibility & explainable match scores</span>
+        </div>
+
+        <div style={{ backgroundColor: "var(--bg-surface-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <Layers size={14} style={{ color: "var(--color-purple)" }} />
+            <strong style={{ fontSize: "12px" }}>Collaboration Deal Room</strong>
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>9-stage deliverable approvals & revision notes</span>
+        </div>
+
+        <div style={{ backgroundColor: "var(--bg-surface-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+            <ShieldCheck size={14} style={{ color: "var(--brand-primary)" }} />
+            <strong style={{ fontSize: "12px" }}>Milestone Engine</strong>
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Audit-trailed deliverables & release protocols</span>
+        </div>
+      </div>
+
+      {/* Dual Registration Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", flexShrink: 0 }}>
+        {/* Creator CTA */}
+        <div
+          style={{
+            backgroundColor: "var(--bg-surface-raised)",
+            border: "1px solid var(--brand-primary)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between"
+          }}
+        >
+          <div>
+            <span className="badge badge-green" style={{ fontSize: "9px" }}>FOR CREATORS</span>
+            <div style={{ fontSize: "12px", fontWeight: "700", marginTop: "4px" }}>Build Your Media Kit</div>
+          </div>
+          <button
+            onClick={() => navigate("/login?role=creator&mode=register")}
+            className="btn-primary"
+            style={{ width: "100%", marginTop: "10px", fontSize: "11px", padding: "7px 10px" }}
+          >
+            Join as Creator →
+          </button>
+        </div>
+
+        {/* Brand CTA */}
+        <div
+          style={{
+            backgroundColor: "var(--bg-surface-raised)",
+            border: "1px solid var(--color-blue)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between"
+          }}
+        >
+          <div>
+            <span className="badge badge-blue" style={{ fontSize: "9px" }}>FOR BRANDS</span>
+            <div style={{ fontSize: "12px", fontWeight: "700", marginTop: "4px" }}>Publish Campaign Brief</div>
+          </div>
+          <button
+            onClick={() => navigate("/login?role=brand&mode=register")}
+            className="btn-secondary"
+            style={{ width: "100%", marginTop: "10px", fontSize: "11px", padding: "7px 10px" }}
+          >
+            Post Brand Brief →
+          </button>
+        </div>
+      </div>
+
+      {/* Trust Badges */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "14px", fontSize: "10px", color: "var(--text-muted)", flexShrink: 0, marginTop: "6px" }}>
+        <span>✓ Zero credit card required</span>
+        <span>✓ AES-256-GCM token encryption</span>
+        <span>✓ Official API standards</span>
+      </div>
+    </div>
+  );
 
   return (
     <section className="scroll-story-container" id="product-story">
       {/* =========================================================
-          STICKY CHAPTER PROGRESS RAIL
+          STICKY CHAPTER PROGRESS RAIL (SYNCS WITH SCROLL)
       ========================================================== */}
       <nav
         className="scroll-story-progress-rail"
@@ -866,18 +1182,18 @@ export default function InteractiveScrollStory() {
           <span style={{ fontSize: "12px", fontWeight: "800", color: "var(--brand-primary)", letterSpacing: "0.04em" }}>
             CHAPTER 0{activeChapter} / 06
           </span>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center" }}>•</span>
-          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-primary)" }}>
-            {activeChapter === 1 && "The Fragmented Ecosystem"}
+          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>•</span>
+          <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
+            {activeChapter === 1 && "The Fragmented Creator Ecosystem"}
             {activeChapter === 2 && "Connect Your Ecosystem"}
             {activeChapter === 3 && "Understand Your Business"}
             {activeChapter === 4 && "Discover Opportunities"}
-            {activeChapter === 5 && "Collaborate & Deliver"}
-            {activeChapter === 6 && "Build Your Business"}
+            {activeChapter === 5 && "From Discovery to Collaboration"}
+            {activeChapter === 6 && "Build Your Creator Business"}
           </span>
         </div>
 
-        {/* Chapter jump pills (Keyboard accessible) */}
+        {/* Interactive Smooth-Scroll Chapter Pills */}
         <div style={{ display: "flex", gap: "8px", overflowX: "auto", maxWidth: "100%" }}>
           {[
             { num: 1, label: "01 Fragmented" },
@@ -891,7 +1207,7 @@ export default function InteractiveScrollStory() {
               key={pill.num}
               onClick={() => scrollToChapter(pill.num)}
               className={`scroll-story-chapter-pill ${activeChapter === pill.num ? "active" : ""}`}
-              aria-label={`Jump to ${pill.label}`}
+              aria-label={`Jump to Chapter ${pill.num}`}
             >
               {pill.label}
             </button>
@@ -908,7 +1224,7 @@ export default function InteractiveScrollStory() {
         --------------------------------------------------------- */}
         <div>
           {/* CHAPTER 1 */}
-          <div ref={chapter1Ref} id="story-chapter-1" className="scroll-story-narrative-item">
+          <div ref={ch1Ref} id="story-chapter-1" className="scroll-story-narrative-item">
             <div className="badge badge-amber" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 01 • THE PROBLEM
             </div>
@@ -925,7 +1241,7 @@ export default function InteractiveScrollStory() {
               <span style={{ color: "var(--color-red)" }}>Your tools are fragmented.</span>
             </h2>
             <p style={{ fontSize: "16px", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.6 }}>
-              You are running a modern multi-channel media enterprise, but your operations are scattered across disparate browser tabs. You manage audience metrics in one platform, send pitch decks over email attachments, track deals on manual spreadsheets, and chase overdue invoice payments across chaotic direct messages.
+              Creators run modern multi-channel media businesses, yet operations are scattered across separate browser tabs: unverified PDF media kits that go stale in weeks, siloed analytics dashboards, unorganized brand email pitches, and invoice reminders lost in direct messages.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
@@ -938,18 +1254,18 @@ export default function InteractiveScrollStory() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <span style={{ color: "var(--color-red)", fontWeight: "800" }}>✕</span>
-                <span>No escrow or milestone protection for completed creator work.</span>
+                <span>Chasing overdue invoice payments across chaotic direct messages.</span>
               </div>
             </div>
 
-            {/* Mobile preview block (Visible only on <=991px) */}
+            {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(1)}
+              {renderScene1()}
             </div>
           </div>
 
           {/* CHAPTER 2 */}
-          <div ref={chapter2Ref} id="story-chapter-2" className="scroll-story-narrative-item">
+          <div ref={ch2Ref} id="story-chapter-2" className="scroll-story-narrative-item">
             <div className="badge badge-green" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 02 • UNIFICATION
             </div>
@@ -965,12 +1281,12 @@ export default function InteractiveScrollStory() {
               Bring your creator ecosystem together.
             </h2>
             <p style={{ fontSize: "16px", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.6 }}>
-              Authenticate your official YouTube, Instagram, and Twitch accounts through genuine platform OAuth 2.0 connectors. Lazarus normalizes disparate API data contracts into a single continuous stream while encrypting all sensitive tokens server-side with AES-256-GCM authenticated ciphers.
+              Connect your channels through official platform APIs. Lazarus unifies disparate data contracts into a single continuous stream while encrypting all sensitive access tokens server-side using AES-256-GCM authenticated ciphers.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
-                <span>Google OAuth & YouTube Data API v3 integration.</span>
+                <span>Google OAuth 2.0 & YouTube Data API v3 connector.</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
@@ -978,18 +1294,18 @@ export default function InteractiveScrollStory() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
-                <span>Twitch Helix API for broadcaster VODs and live stats.</span>
+                <span>Twitch Helix API for broadcaster VOD playback and live statistics.</span>
               </div>
             </div>
 
             {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(2)}
+              {renderScene2()}
             </div>
           </div>
 
           {/* CHAPTER 3 */}
-          <div ref={chapter3Ref} id="story-chapter-3" className="scroll-story-narrative-item">
+          <div ref={ch3Ref} id="story-chapter-3" className="scroll-story-narrative-item">
             <div className="badge badge-blue" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 03 • CREATOR STUDIO
             </div>
@@ -1024,12 +1340,12 @@ export default function InteractiveScrollStory() {
 
             {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(3)}
+              {renderScene3()}
             </div>
           </div>
 
           {/* CHAPTER 4 */}
-          <div ref={chapter4Ref} id="story-chapter-4" className="scroll-story-narrative-item">
+          <div ref={ch4Ref} id="story-chapter-4" className="scroll-story-narrative-item">
             <div className="badge badge-purple" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 04 • OPPORTUNITY ENGINE
             </div>
@@ -1064,12 +1380,12 @@ export default function InteractiveScrollStory() {
 
             {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(4)}
+              {renderScene4()}
             </div>
           </div>
 
           {/* CHAPTER 5 */}
-          <div ref={chapter5Ref} id="story-chapter-5" className="scroll-story-narrative-item">
+          <div ref={ch5Ref} id="story-chapter-5" className="scroll-story-narrative-item">
             <div className="badge badge-amber" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 05 • COLLABORATION LIFECYCLE
             </div>
@@ -1085,12 +1401,12 @@ export default function InteractiveScrollStory() {
               From discovery to collaboration.
             </h2>
             <p style={{ fontSize: "16px", color: "var(--text-secondary)", marginTop: "16px", lineHeight: 1.6 }}>
-              Transform casual interest into binding brand partnerships. Manage the complete 8-stage collaboration lifecycle inside one collaborative workspace: from initial pitch application and terms negotiation to deliverable draft submission, timestamped revision notes, formal sign-off, and automated escrow release.
+              Transform casual interest into structured brand partnerships. Manage the complete 9-stage collaboration lifecycle inside one collaborative workspace: from initial application and commercial terms negotiation to draft deliverable submission, timestamped revision loops, formal brand approval, and milestone completion.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
-                <span>Structured 8-stage lifecycle with built-in accountability.</span>
+                <span>Structured 9-stage lifecycle with built-in accountability.</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
@@ -1098,18 +1414,18 @@ export default function InteractiveScrollStory() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                 <CheckCircle2 size={16} style={{ color: "var(--brand-primary)" }} />
-                <span>Escrow state machine: funds are protected until deliverable is verified.</span>
+                <span>Simulated milestone state machine protecting creator deliverables.</span>
               </div>
             </div>
 
             {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(5)}
+              {renderScene5()}
             </div>
           </div>
 
           {/* CHAPTER 6 */}
-          <div ref={chapter6Ref} id="story-chapter-6" className="scroll-story-narrative-item">
+          <div ref={ch6Ref} id="story-chapter-6" className="scroll-story-narrative-item">
             <div className="badge badge-green" style={{ width: "fit-content", marginBottom: "16px" }}>
               CHAPTER 06 • GET STARTED
             </div>
@@ -1148,13 +1464,13 @@ export default function InteractiveScrollStory() {
 
             {/* Mobile preview block */}
             <div className="scroll-story-mobile-preview card">
-              {renderPreviewCanvas(6)}
+              {renderScene6()}
             </div>
           </div>
         </div>
 
         {/* -------------------------------------------------------
-            RIGHT COLUMN: STICKY PRODUCT PREVIEW STAGE (DESKTOP)
+            RIGHT COLUMN: STICKY CINEMATIC PRODUCT PREVIEW STAGE (DESKTOP)
         --------------------------------------------------------- */}
         <div className="scroll-story-sticky-pane">
           <div className="scroll-story-preview-window">
@@ -1181,14 +1497,33 @@ export default function InteractiveScrollStory() {
                   }}
                 />
                 <span style={{ fontSize: "10px", fontWeight: "800", color: "var(--brand-primary)" }}>
-                  CH 0{activeChapter}
+                  SCENE 0{activeChapter}
                 </span>
               </div>
             </div>
 
-            {/* Window Chrome Body */}
+            {/* Persistent Viewport with Cross-Fading Scene Panels */}
             <div className="scroll-story-preview-body">
-              {renderPreviewCanvas(activeChapter)}
+              <div className="story-stage-viewport">
+                <div className={`story-scene-panel ${activeChapter === 1 ? "active" : ""}`}>
+                  {renderScene1()}
+                </div>
+                <div className={`story-scene-panel ${activeChapter === 2 ? "active" : ""}`}>
+                  {renderScene2()}
+                </div>
+                <div className={`story-scene-panel ${activeChapter === 3 ? "active" : ""}`}>
+                  {renderScene3()}
+                </div>
+                <div className={`story-scene-panel ${activeChapter === 4 ? "active" : ""}`}>
+                  {renderScene4()}
+                </div>
+                <div className={`story-scene-panel ${activeChapter === 5 ? "active" : ""}`}>
+                  {renderScene5()}
+                </div>
+                <div className={`story-scene-panel ${activeChapter === 6 ? "active" : ""}`}>
+                  {renderScene6()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
