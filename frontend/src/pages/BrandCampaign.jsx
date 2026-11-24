@@ -1,11 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 
-const API = "http://localhost:5000";
-
-/**
- * UI labels (pretty)
- * Stored values (lowercase) → for matching with creators
- */
 const NICHES = [
   { label: "Technology", value: "tech" },
   { label: "AI", value: "ai" },
@@ -25,6 +21,7 @@ const NICHES = [
 ];
 
 export default function BrandCampaign() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     brandName: "",
     title: "",
@@ -33,13 +30,9 @@ export default function BrandCampaign() {
     deliverables: ""
   });
 
-  // Stored as lowercase values
   const [selectedNiches, setSelectedNiches] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  /* ===============================
-     HANDLERS
-  ================================ */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -52,9 +45,6 @@ export default function BrandCampaign() {
     );
   };
 
-  /* ===============================
-     CREATE CAMPAIGN
-  ================================ */
   const createCampaign = async () => {
     if (!form.brandName || !form.title) {
       alert("Brand name and title are required");
@@ -69,58 +59,41 @@ export default function BrandCampaign() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API}/api/brand/campaign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          niches: selectedNiches // lowercase → matches creator
-        })
+      await api.brand.createCampaign({
+        ...form,
+        niches: selectedNiches
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        alert("Backend error: " + err.message);
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      console.log("✅ Campaign saved in backend:", data);
 
       alert("Campaign created successfully 🚀");
-
-      // Reset form
-      setForm({
-        brandName: "",
-        title: "",
-        description: "",
-        budget: "",
-        deliverables: ""
-      });
-      setSelectedNiches([]);
-
+      navigate("/brand");
     } catch (err) {
       console.error(err);
-      alert("Network error ❌");
+      alert(err.message || "Failed to create campaign");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  /* ===============================
-     UI
-  ================================ */
   return (
     <div style={pageBackground}>
       <div style={container}>
+        {/* Back Link */}
+        <div style={{ marginBottom: "16px" }}>
+          <button
+            onClick={() => navigate("/brand")}
+            style={{ background: "none", border: "none", color: "#065f46", fontWeight: "600", fontSize: "14px", cursor: "pointer" }}
+          >
+            ← Back to Brand Dashboard
+          </button>
+        </div>
+
         {/* Header Card */}
         <div style={headerCard}>
           <div style={iconWrapper}>
             <span style={icon}>🏷️</span>
           </div>
           <h1 style={title}>Create Brand Campaign</h1>
-          <p style={subtitle}>Creators with matching niches will see this campaign</p>
+          <p style={subtitle}>Creators with matching niches will discover this campaign</p>
         </div>
 
         {/* Campaign Details Card */}
@@ -131,7 +104,7 @@ export default function BrandCampaign() {
             <label style={label}>Brand Name *</label>
             <input
               name="brandName"
-              placeholder="Enter your brand name"
+              placeholder="e.g. Nike / Gymshark / TechCorp"
               value={form.brandName}
               onChange={handleChange}
               style={input}
@@ -142,7 +115,7 @@ export default function BrandCampaign() {
             <label style={label}>Campaign Title *</label>
             <input
               name="title"
-              placeholder="Give your campaign a catchy title"
+              placeholder="e.g. Summer Fitness Gear Reel Campaign"
               value={form.title}
               onChange={handleChange}
               style={input}
@@ -153,7 +126,7 @@ export default function BrandCampaign() {
             <label style={label}>Description</label>
             <textarea
               name="description"
-              placeholder="Describe your campaign goals and requirements..."
+              placeholder="Describe campaign goals, messaging, creative brief, and audience target..."
               value={form.description}
               onChange={handleChange}
               style={{...input, ...textarea}}
@@ -163,10 +136,10 @@ export default function BrandCampaign() {
 
           <div style={twoColumnGrid}>
             <div style={inputGroup}>
-              <label style={label}>Budget (₹)</label>
+              <label style={label}>Budget (₹) *</label>
               <input
                 name="budget"
-                placeholder="e.g., 50,000"
+                placeholder="e.g., 50000"
                 value={form.budget}
                 onChange={handleChange}
                 style={input}
@@ -178,7 +151,7 @@ export default function BrandCampaign() {
               <label style={label}>Deliverables</label>
               <input
                 name="deliverables"
-                placeholder="e.g., 1 Reel + 1 Story"
+                placeholder="e.g., 1 YouTube Video + 2 Shorts"
                 value={form.deliverables}
                 onChange={handleChange}
                 style={input}
@@ -189,7 +162,7 @@ export default function BrandCampaign() {
 
         {/* Niches Selection Card */}
         <div style={card}>
-          <h2 style={sectionTitle}>Select Target Niches *</h2>
+          <h2 style={sectionTitle}>Target Creator Niches *</h2>
           <p style={helperText}>
             Choose the niches that align with your campaign
             {selectedNiches.length > 0 && (
@@ -206,9 +179,9 @@ export default function BrandCampaign() {
                   onClick={() => toggleNiche(niche.value)}
                   style={{
                     ...nicheCard,
-                    background: isSelected ? "#000" : "#fff",
+                    background: isSelected ? "#065f46" : "#fff",
                     color: isSelected ? "#fff" : "#333",
-                    border: isSelected ? "2px solid #000" : "2px solid #e5e5e5",
+                    border: isSelected ? "2px solid #065f46" : "2px solid #e5e5e5",
                     transform: isSelected ? "translateY(-2px)" : "translateY(0)"
                   }}
                 >
@@ -231,18 +204,10 @@ export default function BrandCampaign() {
             }} 
             disabled={loading}
           >
-            {loading ? (
-              <>
-                <span style={spinner}>⏳</span> Publishing...
-              </>
-            ) : (
-              <>
-                <span style={buttonIcon}>🚀</span> Publish Campaign
-              </>
-            )}
+            {loading ? "Publishing..." : "🚀 Publish Campaign"}
           </button>
           <p style={actionHelperText}>
-            Your campaign will be visible to all matching creators immediately
+            Your campaign will be matched with verified creators immediately upon publication
           </p>
         </div>
       </div>
@@ -250,9 +215,6 @@ export default function BrandCampaign() {
   );
 }
 
-/* ===============================
-   STYLES
-================================ */
 const pageBackground = {
   minHeight: "100vh",
   background: "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)",
@@ -268,32 +230,30 @@ const container = {
 const headerCard = {
   background: "#fff",
   borderRadius: "20px",
-  padding: "40px",
+  padding: "36px",
   marginBottom: "24px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
   textAlign: "center"
 };
 
 const iconWrapper = {
-  marginBottom: "16px"
+  marginBottom: "12px"
 };
 
 const icon = {
-  fontSize: "48px",
-  display: "inline-block",
-  animation: "float 3s ease-in-out infinite"
+  fontSize: "44px",
+  display: "inline-block"
 };
 
 const title = {
-  fontSize: "32px",
+  fontSize: "30px",
   fontWeight: "700",
   color: "#1a1a1a",
-  margin: "0 0 8px 0",
-  letterSpacing: "-0.5px"
+  margin: "0 0 8px 0"
 };
 
 const subtitle = {
-  fontSize: "16px",
+  fontSize: "15px",
   color: "#666",
   margin: "0"
 };
@@ -303,15 +263,14 @@ const card = {
   borderRadius: "20px",
   padding: "32px",
   marginBottom: "24px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-  transition: "box-shadow 0.3s ease"
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)"
 };
 
 const sectionTitle = {
   fontSize: "20px",
   fontWeight: "600",
   color: "#1a1a1a",
-  margin: "0 0 20px 0"
+  margin: "0 0 16px 0"
 };
 
 const inputGroup = {
@@ -333,7 +292,6 @@ const input = {
   border: "2px solid #e5e5e5",
   borderRadius: "12px",
   outline: "none",
-  transition: "all 0.3s ease",
   fontFamily: "inherit",
   boxSizing: "border-box"
 };
@@ -357,7 +315,7 @@ const helperText = {
 };
 
 const selectedCount = {
-  color: "#2e7d32",
+  color: "#065f46",
   fontWeight: "600"
 };
 
@@ -368,64 +326,43 @@ const nichesGrid = {
 };
 
 const nicheCard = {
-  padding: "16px 12px",
+  padding: "12px 16px",
   borderRadius: "12px",
-  textAlign: "center",
   cursor: "pointer",
-  userSelect: "none",
   fontSize: "14px",
   fontWeight: "500",
-  transition: "all 0.2s ease",
-  position: "relative",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)"
+  textAlign: "center",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  transition: "all 0.2s ease"
 };
 
 const checkmark = {
-  position: "absolute",
-  top: "6px",
-  right: "8px",
-  fontSize: "12px",
+  fontSize: "14px",
   fontWeight: "bold"
 };
 
 const actionCard = {
-  background: "#fff",
-  borderRadius: "20px",
-  padding: "32px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-  textAlign: "center"
+  textAlign: "center",
+  marginTop: "16px"
 };
 
 const publishButton = {
-  width: "100%",
-  padding: "16px 32px",
+  padding: "16px 40px",
   fontSize: "16px",
-  fontWeight: "600",
-  background: "linear-gradient(135deg, #000 0%, #333 100%)",
+  fontWeight: "700",
   color: "#fff",
+  background: "#065f46",
   border: "none",
   borderRadius: "14px",
   cursor: "pointer",
-  transition: "all 0.3s ease",
-  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px"
-};
-
-const buttonIcon = {
-  fontSize: "18px"
-};
-
-const spinner = {
-  fontSize: "18px",
-  animation: "spin 1s linear infinite"
+  boxShadow: "0 4px 15px rgba(6, 95, 70, 0.3)"
 };
 
 const actionHelperText = {
   fontSize: "13px",
   color: "#666",
-  marginTop: "12px",
-  marginBottom: "0"
+  marginTop: "12px"
 };

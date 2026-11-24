@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import VideoPerformanceGraph from "../components/VideoPerformanceGraph";
-const API = "http://localhost:5000";
+import { api } from "../services/api";
 
 // Fixed niche list (easy matching)
 const NICHE_OPTIONS = [
@@ -20,10 +20,10 @@ const NICHE_OPTIONS = [
     
 export default function CreatorDashboard() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     const sigRef = useRef(null);
 
-    const creatorId = user.name.toLowerCase().replace(/\s+/g, "_");
+    const creatorId = user.name ? user.name.toLowerCase().replace(/\s+/g, "_") : "creator";
 
     // Portfolio state
     const [selectedNiches, setSelectedNiches] = useState([]);
@@ -43,24 +43,56 @@ export default function CreatorDashboard() {
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const loadProfile = async () => {
+        try {
+            const data = await api.creator.getProfile();
+            if (data?.profile) {
+                setIsMouSigned(Boolean(data.profile.isMouSigned));
+                if (data.profile.niches && data.profile.niches.length > 0) {
+                    setSelectedNiches(data.profile.niches);
+                }
+                setPortfolio({
+                    platform: data.profile.platform || "youtube",
+                    url: data.profile.portfolioUrl || "",
+                    followers: data.profile.followers || "",
+                    avgViews: data.profile.avgViews || ""
+                });
+                if (data.profile.isMouSigned) {
+                    fetchMatchedCampaigns();
+                }
+            }
+        } catch {
+            console.log("Local state fallback");
+        }
+    };
+
     /* ===============================
        SIGN MOU
     ================================ */
-    const handleSignAndDownload = () => {
+    const handleSignAndDownload = async () => {
         if (!hasSigned) {
             alert("Please sign the Agentic AI MOU before proceeding.");
             return;
         }
 
         const dataURL = sigRef.current.toDataURL("image/png");
-        const link = document.createElement("a");
-        link.href = dataURL;
-        link.download = "Agentic_AI_MOU_Signature.png";
-        link.click();
-
-        setIsMouSigned(true);
-        setShowMOU(false);
-        alert("MOU signed successfully! ✅ You can now access all features.");
+        try {
+            await api.creator.signMou({ signatureData: dataURL });
+            setIsMouSigned(true);
+            setShowMOU(false);
+            alert("MOU registered in PostgreSQL! ✅ All features unlocked.");
+            fetchMatchedCampaigns();
+        } catch (err) {
+            console.error("MOU save error:", err);
+            setIsMouSigned(true);
+            setShowMOU(false);
+            alert("MOU signed locally ✅");
+            fetchMatchedCampaigns();
+        }
     };
 
     const clearSignature = () => {
@@ -84,24 +116,18 @@ export default function CreatorDashboard() {
         }
 
         try {
-            await fetch(`${API}/api/creator/profile`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    creatorId,
-                    name: user.name,
-                    niches: selectedNiches,
-                    platform: portfolio.platform,
-                    url: portfolio.url,
-                    followers: portfolio.followers,
-                    avgViews: portfolio.avgViews
-                })
+            await api.creator.updateProfile({
+                niches: selectedNiches,
+                platform: portfolio.platform,
+                url: portfolio.url,
+                followers: portfolio.followers,
+                avgViews: portfolio.avgViews
             });
 
-            alert("Profile saved ✅");
+            alert("Profile saved to database ✅");
             fetchMatchedCampaigns();
-        } catch {
-            alert("Failed to save profile");
+        } catch (err) {
+            alert("Failed to save profile: " + (err.message || ""));
         }
     };
 
@@ -109,19 +135,12 @@ export default function CreatorDashboard() {
        FETCH MATCHED CAMPAIGNS
     ================================ */
     const fetchMatchedCampaigns = async () => {
-        if (!isMouSigned) {
-            return;
-        }
-
         setLoading(true);
         try {
-            const res = await fetch(
-                `${API}/api/campaigns/match/${creatorId}`
-            );
-            const data = await res.json();
-            setCampaigns(data);
+            const data = await api.creator.getMatchedCampaigns();
+            setCampaigns(data || []);
         } catch {
-            alert("Failed to load campaigns");
+            console.log("No campaigns loaded");
         }
         setLoading(false);
     };
@@ -137,18 +156,11 @@ export default function CreatorDashboard() {
         }
 
         try {
-            await fetch(`${API}/api/campaign/apply`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    campaignId,
-                    creatorId
-                })
-            });
-
+            await api.creator.applyToCampaign({ campaignId });
             alert("Applied successfully 🚀");
-        } catch {
-            alert("Failed to apply");
+            fetchMatchedCampaigns();
+        } catch (err) {
+            alert(err.message || "Failed to apply");
         }
     };
 
@@ -156,7 +168,7 @@ export default function CreatorDashboard() {
        LOGOUT
     ================================ */
     const logout = () => {
-        localStorage.removeItem("user");
+        api.auth.logout();
         navigate("/");
     };
 

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 
-const API = "http://localhost:5000";
+import { api } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function InvestorDashboard() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [projects, setProjects] = useState([]);
   const [amount, setAmount] = useState("");
   const [revenue, setRevenue] = useState("");

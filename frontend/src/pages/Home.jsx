@@ -1,52 +1,59 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 import heroImg from "../assets/creator-hero.jpg";
 
 export default function Home() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [query, setQuery] = useState("");
   const [aiResult, setAiResult] = useState("");
   const [loading, setLoading] = useState(false);
 
   const runAgent = async () => {
-    if (!query) return alert("Enter a niche");
+    if (!query) return alert("Enter a creator niche");
 
     setLoading(true);
     setAiResult("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
-      });
-
-      const data = await res.json();
+      const data = await api.ai.generateIdeas(query);
       setAiResult(data.ai_output);
     } catch {
-      alert("AI error");
+      alert("AI generation service encountered an error.");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setLoading(false);
+  const logout = () => {
+    api.auth.logout();
+    navigate("/");
   };
 
   return (
     <div style={page}>
 
-      {/* 🍎 NAVBAR */}
+      {/* NAVBAR */}
       <nav style={nav}>
-        <h3 style={{ fontWeight: 600 }}>Lazarus</h3>
-        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-          <span style={{ color: "#555" }}>👋 {user?.name}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <h3 style={{ fontWeight: 800, margin: 0, fontSize: "20px", color: "#111827" }}>
+            Lazarus <span style={{ color: "#059669" }}>V2</span>
+          </h3>
+        </div>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <span style={{ color: "#6b7280", fontSize: "14px" }}>👋 {user?.name || "Creator"}</span>
           <button style={ghostBtn} onClick={() => navigate("/creator")}>
             Dashboard
+          </button>
+          <button style={logoutNavBtn} onClick={logout}>
+            Logout
           </button>
         </div>
       </nav>
 
-      {/* 🍎 HERO SECTION */}
+      {/* HERO SECTION */}
       <section style={hero}>
         <div>
           <h1 style={heroTitle}>
@@ -54,25 +61,22 @@ export default function Home() {
           </h1>
 
           <p style={heroText}>
-            Lazarus is your AI co-pilot for content ideas, monetization
-            strategy, and creator funding.
+            Lazarus is your AI co-pilot for viral content ideas, monetization strategy, and milestone-backed escrow creator funding.
           </p>
 
-          <div style={{ marginTop: "30px" }}>
+          <div style={{ marginTop: "28px" }}>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. travel vlogging, fitness, finance"
+              placeholder="e.g. AI tools, fitness, urban exploration, crypto"
               style={input}
             />
 
             <br /><br />
 
-            <button style={primaryBtn} onClick={runAgent}>
-              Generate with AI
+            <button style={primaryBtn} onClick={runAgent} disabled={loading}>
+              {loading ? "Thinking..." : "✨ Generate with Gemini AI"}
             </button>
-
-            {loading && <p style={{ marginTop: 15 }}>Thinking…</p>}
           </div>
         </div>
 
@@ -83,161 +87,157 @@ export default function Home() {
         />
       </section>
 
-      {/* 🍎 AI RESULT */}
+      {/* AI RESULT */}
       {aiResult && (
         <section style={resultSection}>
-          <h2 style={{ marginBottom: "20px" }}>AI Strategy</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ margin: 0, fontSize: "22px", color: "#111827" }}>🤖 Gemini Content Blueprint</h2>
+            <span style={{ fontSize: "12px", backgroundColor: "#ecfdf5", color: "#059669", padding: "4px 10px", borderRadius: "12px", fontWeight: "600" }}>
+              Niche: {query}
+            </span>
+          </div>
 
           <div style={resultCard}>
             <pre style={resultText}>{aiResult}</pre>
           </div>
 
           <button
-            style={{ ...primaryBtn, marginTop: "30px" }}
+            style={{ ...primaryBtn, marginTop: "24px" }}
             onClick={() => navigate("/create-project")}
           >
-            Create Project from Insight
+            🎬 Launch Project from this Blueprint →
           </button>
         </section>
       )}
 
-      {/* 🍎 ACTION CARDS */}
-      <section style={actions}>
-        <ActionCard
-          title="Creator Dashboard"
-          desc="Manage projects & funding"
-          onClick={() => navigate("/creator")}
-        />
-        <ActionCard
-          title="Public Profile"
-          desc="Showcase your portfolio"
-          onClick={() => navigate("/creator-profile")}
-        />
-        <ActionCard
-          title="New Project"
-          desc="Launch a funded idea"
-          onClick={() => navigate("/create-project")}
-        />
-      </section>
-
+      {/* FOOTER */}
+      <footer style={footer}>
+        <p>© 2026 Lazarus Creator Escrow Platform. Built with React, Vite, Express, Prisma & Neon PostgreSQL.</p>
+      </footer>
     </div>
   );
 }
-
-/* 🔹 COMPONENT */
-function ActionCard({ title, desc, onClick }) {
-  return (
-    <div style={card}>
-      <h4>{title}</h4>
-      <p style={{ color: "#666" }}>{desc}</p>
-      <button style={ghostBtn} onClick={onClick}>
-        Open →
-      </button>
-    </div>
-  );
-}
-
-/* 🍎 STYLES */
 
 const page = {
-  background: "#f5f5f7",
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  backgroundColor: "#f9fafb",
   minHeight: "100vh",
-  fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif"
+  color: "#1d1d1f"
 };
 
 const nav = {
   display: "flex",
   justifyContent: "space-between",
-  padding: "20px 60px",
-  background: "rgba(255,255,255,0.8)",
-  backdropFilter: "blur(10px)",
-  position: "sticky",
-  top: 0,
-  zIndex: 10
+  alignItems: "center",
+  padding: "18px 40px",
+  backgroundColor: "#ffffff",
+  borderBottom: "1px solid #e5e7eb"
+};
+
+const ghostBtn = {
+  background: "transparent",
+  border: "1px solid #d1d5db",
+  borderRadius: "10px",
+  padding: "8px 16px",
+  cursor: "pointer",
+  fontWeight: "500",
+  fontSize: "14px",
+  color: "#374151"
+};
+
+const logoutNavBtn = {
+  background: "none",
+  border: "none",
+  color: "#dc2626",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "500"
 };
 
 const hero = {
+  maxWidth: "1100px",
+  margin: "0 auto",
+  padding: "60px 20px 40px 20px",
   display: "grid",
-  gridTemplateColumns: "1.1fr 1fr",
-  gap: "60px",
-  padding: "80px 60px",
+  gridTemplateColumns: "1.2fr 1fr",
+  gap: "40px",
   alignItems: "center"
 };
 
 const heroTitle = {
-  fontSize: "48px",
-  fontWeight: 700,
-  lineHeight: 1.1
+  fontSize: "52px",
+  fontWeight: "800",
+  lineHeight: "1.1",
+  letterSpacing: "-0.03em",
+  color: "#111827",
+  margin: "0 0 16px 0"
 };
 
 const heroText = {
   fontSize: "18px",
-  color: "#555",
-  marginTop: "20px",
-  maxWidth: "500px"
+  color: "#4b5563",
+  lineHeight: "1.5",
+  margin: 0
 };
 
 const heroImage = {
   width: "100%",
   borderRadius: "20px",
-  boxShadow: "0 30px 60px rgba(0,0,0,0.15)"
+  boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
+  objectFit: "cover",
+  maxHeight: "380px"
 };
 
 const input = {
-  padding: "14px 16px",
   width: "100%",
   maxWidth: "420px",
+  padding: "14px 16px",
   borderRadius: "12px",
-  border: "1px solid #ddd",
-  fontSize: "16px"
+  border: "1px solid #d1d5db",
+  fontSize: "15px",
+  outline: "none",
+  boxSizing: "border-box"
 };
 
 const primaryBtn = {
-  background: "linear-gradient(180deg,#0071e3,#005ac1)",
-  color: "#fff",
-  padding: "14px 28px",
-  borderRadius: "999px",
+  backgroundColor: "#059669",
+  color: "#ffffff",
   border: "none",
-  fontSize: "16px",
-  cursor: "pointer"
-};
-
-const ghostBtn = {
-  background: "transparent",
-  border: "1px solid #ccc",
-  padding: "10px 18px",
-  borderRadius: "999px",
-  cursor: "pointer"
+  borderRadius: "12px",
+  padding: "14px 24px",
+  fontSize: "15px",
+  fontWeight: "600",
+  cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(5,150,105,0.25)"
 };
 
 const resultSection = {
-  padding: "80px 60px",
-  background: "#fff"
+  maxWidth: "800px",
+  margin: "40px auto 60px auto",
+  padding: "0 20px"
 };
 
 const resultCard = {
-  background: "#f5f5f7",
-  padding: "30px",
-  borderRadius: "20px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+  background: "#ffffff",
+  padding: "24px",
+  borderRadius: "16px",
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.04)"
 };
 
 const resultText = {
   whiteSpace: "pre-wrap",
+  fontFamily: "inherit",
   fontSize: "15px",
-  lineHeight: 1.6
+  lineHeight: "1.6",
+  color: "#374151",
+  margin: 0
 };
 
-const actions = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))",
-  gap: "30px",
-  padding: "80px 60px"
-};
-
-const card = {
-  background: "#fff",
-  padding: "30px",
-  borderRadius: "20px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+const footer = {
+  textAlign: "center",
+  padding: "30px 20px",
+  borderTop: "1px solid #e5e7eb",
+  color: "#9ca3af",
+  fontSize: "13px"
 };
