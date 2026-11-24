@@ -1,0 +1,312 @@
+// Prisma schema for Lazarus V2 — Hosted PostgreSQL (Neon)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -------------------------------------------------------------
+// USER & ROLE MODELS
+// -------------------------------------------------------------
+
+enum Role {
+  CREATOR
+  BRAND
+  INVESTOR
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(CREATOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creatorProfile     CreatorProfile?
+  brandProfile       BrandProfile?
+  investorProfile    InvestorProfile?
+  investments        Investment[]
+  escrowTransactions EscrowTransaction[]
+
+  @@map("users")
+}
+
+model CreatorProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio          String?
+  niches       String[] @default([])
+  platform     String   @default("youtube")
+  portfolioUrl String?
+  followers    String?
+  avgViews     String?
+  isMouSigned  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  projects     Project[]
+  applications CampaignApplication[]
+  mous         MOUAgreement[]
+  submissions  Submission[]
+
+  @@map("creator_profiles")
+}
+
+model BrandProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  website     String?
+  industry    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaigns Campaign[]
+
+  @@map("brand_profiles")
+}
+
+model InvestorProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization  String?
+  totalInvested Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("investor_profiles")
+}
+
+model MOUAgreement {
+  id               String         @id @default(uuid())
+  creatorProfileId String
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  documentTitle    String         @default("Agentic AI Creator MOU Agreement")
+  signatureData    String         @db.Text
+  signedAt         DateTime       @default(now())
+
+  @@map("mou_agreements")
+}
+
+// -------------------------------------------------------------
+// PROJECT, EXPENSE & MILESTONE MODELS
+// -------------------------------------------------------------
+
+enum ProjectStatus {
+  DRAFT
+  FUNDING
+  IN_PROGRESS
+  SUBMITTED
+  COMPLETED
+  DISPUTED
+}
+
+model Project {
+  id               String        @id @default(uuid())
+  creatorProfileId String
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title            String
+  description      String        @db.Text
+  videoType        String        @default("general")
+  fundingTarget    Float
+  amountRaised     Float         @default(0)
+  upfrontRatio     Float         @default(0.30)
+  status           ProjectStatus @default(FUNDING)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  expenses           ExpenseItem[]
+  milestones         Milestone[]
+  investments        Investment[]
+  escrowTransactions EscrowTransaction[]
+
+  @@map("projects")
+}
+
+model ExpenseItem {
+  id              String   @id @default(uuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category        String
+  allocatedAmount Float?
+  description     String?
+  createdAt       DateTime @default(now())
+
+  @@map("expense_items")
+}
+
+enum MilestoneStatus {
+  PENDING
+  HELD
+  SUBMITTED
+  APPROVED
+  RELEASED
+  DISPUTED
+  REFUNDED
+}
+
+model Milestone {
+  id            String          @id @default(uuid())
+  projectId     String
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?         @db.Text
+  targetAmount  Float
+  sequenceOrder Int             @default(1)
+  status        MilestoneStatus @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  submissions        Submission[]
+  escrowTransactions EscrowTransaction[]
+
+  @@map("milestones")
+}
+
+// -------------------------------------------------------------
+// SUBMISSIONS & REVIEWS
+// -------------------------------------------------------------
+
+enum SubmissionStatus {
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+}
+
+model Submission {
+  id               String           @id @default(uuid())
+  milestoneId      String
+  milestone        Milestone        @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  creatorProfileId String
+  creatorProfile   CreatorProfile   @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  assetUrl         String           @db.Text
+  notes            String?          @db.Text
+  status           SubmissionStatus @default(SUBMITTED)
+  reviewerFeedback String?          @db.Text
+  submittedAt      DateTime         @default(now())
+  reviewedAt       DateTime?
+
+  @@map("submissions")
+}
+
+// -------------------------------------------------------------
+// INVESTMENTS & ESCROW STATE MACHINE
+// -------------------------------------------------------------
+
+enum InvestmentStatus {
+  COMMITTED
+  HELD_IN_ESCROW
+  RELEASED
+  REFUNDED
+}
+
+model Investment {
+  id         String           @id @default(uuid())
+  investorId String
+  investor   User             @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  projectId  String
+  project    Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amount     Float
+  status     InvestmentStatus @default(HELD_IN_ESCROW)
+  createdAt  DateTime         @default(now())
+
+  escrowTransactions EscrowTransaction[]
+
+  @@map("investments")
+}
+
+enum EscrowTxnType {
+  DEPOSIT
+  HOLD
+  RELEASE
+  REFUND
+  DISPUTE
+}
+
+enum EscrowTxnStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model EscrowTransaction {
+  id           String          @id @default(uuid())
+  projectId    String
+  project      Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestoneId  String?
+  milestone    Milestone?      @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  investmentId String?
+  investment   Investment?     @relation(fields: [investmentId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Float
+  type         EscrowTxnType
+  status       EscrowTxnStatus @default(COMPLETED)
+  externalTxnId String?
+  note         String?
+  createdAt    DateTime        @default(now())
+
+  @@map("escrow_transactions")
+}
+
+// -------------------------------------------------------------
+// BRAND CAMPAIGNS & MATCHING
+// -------------------------------------------------------------
+
+enum CampaignStatus {
+  OPEN
+  ACTIVE
+  COMPLETED
+  CLOSED
+}
+
+model Campaign {
+  id             String         @id @default(uuid())
+  brandProfileId String
+  brandProfile   BrandProfile   @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+  title          String
+  description    String         @db.Text
+  niches         String[]       @default([])
+  budget         Float
+  deliverables   String         @db.Text
+  status         CampaignStatus @default(OPEN)
+  deadline       DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  applications CampaignApplication[]
+
+  @@map("campaigns")
+}
+
+enum ApplicationStatus {
+  APPLIED
+  ACCEPTED
+  REJECTED
+}
+
+model CampaignApplication {
+  id               String            @id @default(uuid())
+  campaignId       String
+  campaign         Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfileId String
+  creatorProfile   CreatorProfile    @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  status           ApplicationStatus @default(APPLIED)
+  pitch            String?           @db.Text
+  appliedAt        DateTime          @default(now())
+  reviewedAt       DateTime?
+
+  @@unique([campaignId, creatorProfileId])
+  @@map("campaign_applications")
+}
