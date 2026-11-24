@@ -2,6 +2,29 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../../services/api";
 import NotificationDrawer from "../NotificationDrawer";
+import ThemeToggle from "../ui/ThemeToggle";
+import {
+  LayoutDashboard,
+  Link2,
+  TrendingUp,
+  Film,
+  Target,
+  FileText,
+  Handshake,
+  Megaphone,
+  Search,
+  Inbox,
+  ShieldCheck,
+  Users,
+  ScrollText,
+  Bell,
+  LogOut,
+  Zap,
+  Plus,
+  Sparkles,
+  Menu,
+  X
+} from "lucide-react";
 
 export default function AppShell({ children, activeTab, onTabChange, pageTitle, subtitle }) {
   const navigate = useNavigate();
@@ -11,6 +34,7 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadUnreadCount();
@@ -32,28 +56,28 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
     navigate("/login");
   };
 
-  // Role-specific navigation items
+  // Role-specific navigation items with Lucide icons
   const creatorNavItems = [
-    { id: "overview", label: "Studio Overview", icon: "📊" },
-    { id: "accounts", label: "Accounts & Sync", icon: "🔗" },
-    { id: "analytics", label: "Verified Analytics", icon: "📈" },
-    { id: "content", label: "Content Library", icon: "🎬" },
-    { id: "opportunities", label: "Opportunity Finder", icon: "🎯" },
-    { id: "mediakit", label: "Media Kit", icon: "📄" },
-    { id: "collaborations", label: "Collaborations", icon: "🤝" }
+    { id: "overview", label: "Studio Overview", icon: LayoutDashboard },
+    { id: "accounts", label: "Accounts & Sync", icon: Link2 },
+    { id: "analytics", label: "Verified Analytics", icon: TrendingUp },
+    { id: "content", label: "Content Library", icon: Film },
+    { id: "opportunities", label: "Opportunity Finder", icon: Target },
+    { id: "mediakit", label: "Media Kit", icon: FileText },
+    { id: "collaborations", label: "Collaborations", icon: Handshake }
   ];
 
   const brandNavItems = [
-    { id: "campaigns", label: "Campaign Studio", icon: "📢" },
-    { id: "discovery", label: "Creator Discovery", icon: "🔍" },
-    { id: "applications", label: "Applications", icon: "📥" },
-    { id: "collaborations", label: "Collaborations", icon: "🤝" }
+    { id: "campaigns", label: "Campaign Studio", icon: Megaphone },
+    { id: "discovery", label: "Creator Discovery", icon: Search },
+    { id: "applications", label: "Applications", icon: Inbox },
+    { id: "collaborations", label: "Collaborations", icon: Handshake }
   ];
 
   const adminNavItems = [
-    { id: "health", label: "System Health", icon: "🛡️" },
-    { id: "users", label: "User Management", icon: "👥" },
-    { id: "audit", label: "Audit Logs", icon: "📜" }
+    { id: "health", label: "System Health", icon: ShieldCheck },
+    { id: "users", label: "User Management", icon: Users },
+    { id: "audit", label: "Audit Logs", icon: ScrollText }
   ];
 
   const navItems =
@@ -63,47 +87,87 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
       ? adminNavItems
       : creatorNavItems;
 
+  const handleNavClick = (id) => {
+    if (onTabChange) {
+      onTabChange(id);
+    }
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div style={shellStyle}>
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div
+          style={mobileBackdropStyle}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside style={sidebarStyle}>
+      <aside
+        style={sidebarStyle}
+        className={`sidebar-responsive ${mobileMenuOpen ? "sidebar-open" : ""}`}
+      >
         {/* Brand Header */}
         <div style={brandHeaderStyle}>
-          <div style={logoIconStyle}>⚡</div>
-          <div>
+          <div style={logoIconStyle}>
+            <Zap size={20} color="#ffffff" />
+          </div>
+          <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ fontWeight: "800", fontSize: "18px", color: "#f8fafc", letterSpacing: "-0.02em" }}>
-                LAZARUS
-              </span>
+              <span style={brandTitleStyle}>LAZARUS</span>
               <span style={v3BadgeStyle}>V3</span>
             </div>
-            <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "500" }}>
-              Creator Studio & Network
-            </div>
+            <div style={brandSubtitleStyle}>Creator Studio & Network</div>
           </div>
+          {mobileMenuOpen && (
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              style={closeMobileBtnStyle}
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Navigation Items */}
         <nav style={navContainerStyle}>
           <div style={navSectionLabelStyle}>
-            {userRole === "BRAND" ? "BRAND WORKSPACE" : userRole === "ADMIN" ? "ADMIN CONSOLE" : "CREATOR WORKSPACE"}
+            {userRole === "BRAND"
+              ? "BRAND WORKSPACE"
+              : userRole === "ADMIN"
+              ? "ADMIN CONSOLE"
+              : "CREATOR WORKSPACE"}
           </div>
 
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
+            const Icon = item.icon;
             return (
               <button
                 key={item.id}
-                onClick={() => onTabChange ? onTabChange(item.id) : null}
+                onClick={() => handleNavClick(item.id)}
                 style={{
                   ...navButtonStyle,
-                  backgroundColor: isActive ? "var(--primary-light)" : "transparent",
-                  color: isActive ? "var(--primary)" : "#94a3b8",
-                  fontWeight: isActive ? "700" : "500"
+                  backgroundColor: isActive
+                    ? "var(--brand-light)"
+                    : "transparent",
+                  color: isActive ? "var(--brand-primary)" : "var(--text-secondary)",
+                  fontWeight: isActive ? "700" : "500",
+                  borderLeft: isActive
+                    ? "3px solid var(--brand-primary)"
+                    : "3px solid transparent"
                 }}
               >
-                <span style={{ fontSize: "16px" }}>{item.icon}</span>
-                <span>{item.label}</span>
+                <Icon
+                  size={18}
+                  style={{
+                    color: isActive ? "var(--brand-primary)" : "var(--text-muted)",
+                    flexShrink: 0
+                  }}
+                />
+                <span style={{ fontSize: "13.5px" }}>{item.label}</span>
               </button>
             );
           })}
@@ -115,52 +179,66 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
             <div style={avatarStyle}>
               {user.name ? user.name[0].toUpperCase() : "U"}
             </div>
-            <div style={{ overflow: "hidden" }}>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div style={{ overflow: "hidden", flex: 1 }}>
+              <div style={userNameStyle}>
                 {user.name || "Authenticated User"}
               </div>
               <span style={rolePillStyle}>{userRole}</span>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ThemeToggle />
             <button
-              onClick={() => setNotificationsOpen(true)}
-              style={iconBtnStyle}
-              title="Notifications"
+              onClick={handleLogout}
+              style={logoutBtnStyle}
+              title="Sign Out"
             >
-              🔔 {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
-            </button>
-            <button onClick={handleLogout} style={logoutBtnStyle}>
-              Sign Out
+              <LogOut size={15} />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main style={mainContentStyle}>
+      <main style={mainContentStyle} className="app-main-responsive">
         {/* Top Header */}
-        <header style={topHeaderStyle}>
-          <div>
-            <h1 style={{ fontSize: "22px", fontWeight: "700", color: "#f8fafc", margin: 0 }}>
-              {pageTitle || "Creator Studio"}
-            </h1>
-            {subtitle && (
-              <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-                {subtitle}
-              </p>
-            )}
-          </div>
-
+        <header style={topHeaderStyle} className="app-top-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
-              onClick={() => setNotificationsOpen(true)}
-              style={{ ...iconBtnStyle, padding: "8px 14px", display: "flex", alignItems: "center", gap: "6px" }}
+              onClick={() => setMobileMenuOpen(true)}
+              style={mobileToggleBtnStyle}
+              className="mobile-toggle-btn"
+              aria-label="Open navigation menu"
             >
-              <span>🔔</span>
-              <span style={{ fontSize: "13px" }}>Notifications</span>
-              {unreadCount > 0 && <span style={unreadBadgeStyle}>{unreadCount}</span>}
+              <Menu size={20} />
+            </button>
+            <div>
+              <h1 style={headerTitleStyle}>
+                {pageTitle || "Creator Studio"}
+              </h1>
+              {subtitle && (
+                <p style={headerSubtitleStyle}>
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <ThemeToggle />
+
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              style={headerNotificationBtnStyle}
+              title="Notifications"
+            >
+              <Bell size={16} />
+              <span className="hide-on-mobile" style={{ fontSize: "13px" }}>Notifications</span>
+              {unreadCount > 0 && (
+                <span style={unreadBadgeStyle}>{unreadCount}</span>
+              )}
             </button>
 
             {userRole === "CREATOR" && (
@@ -168,7 +246,8 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
                 onClick={() => onTabChange && onTabChange("opportunities")}
                 style={ctaHeaderBtnStyle}
               >
-                🎯 Find Brand Deals
+                <Sparkles size={16} />
+                <span>Find Brand Deals</span>
               </button>
             )}
 
@@ -177,7 +256,8 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
                 onClick={() => onTabChange && onTabChange("campaigns")}
                 style={ctaHeaderBtnStyle}
               >
-                ➕ New Campaign
+                <Plus size={16} />
+                <span>New Campaign</span>
               </button>
             )}
           </div>
@@ -201,12 +281,13 @@ export default function AppShell({ children, activeTab, onTabChange, pageTitle, 
   );
 }
 
-// Styling Constants
+// Styling Constants using Semantic Tokens
 const shellStyle = {
   display: "flex",
   minHeight: "100vh",
   backgroundColor: "var(--bg-canvas)",
-  color: "var(--text-main)"
+  color: "var(--text-primary)",
+  position: "relative"
 };
 
 const sidebarStyle = {
@@ -218,11 +299,38 @@ const sidebarStyle = {
   position: "sticky",
   top: 0,
   height: "100vh",
-  flexShrink: 0
+  flexShrink: 0,
+  transition: "transform 0.25s ease"
+};
+
+const mobileBackdropStyle = {
+  position: "fixed",
+  inset: 0,
+  backgroundColor: "var(--bg-overlay)",
+  backdropFilter: "blur(4px)",
+  zIndex: 1150
+};
+
+const mobileToggleBtnStyle = {
+  background: "none",
+  border: "1px solid var(--border-subtle)",
+  borderRadius: "var(--radius-sm)",
+  color: "var(--text-primary)",
+  padding: "6px",
+  display: "none", // Displayed via CSS media query if needed
+  cursor: "pointer"
+};
+
+const closeMobileBtnStyle = {
+  background: "none",
+  border: "none",
+  color: "var(--text-secondary)",
+  cursor: "pointer",
+  padding: "4px"
 };
 
 const brandHeaderStyle = {
-  padding: "24px 20px",
+  padding: "20px",
   display: "flex",
   alignItems: "center",
   gap: "12px",
@@ -232,18 +340,31 @@ const brandHeaderStyle = {
 const logoIconStyle = {
   width: "36px",
   height: "36px",
-  borderRadius: "10px",
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  borderRadius: "var(--radius-md)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "18px",
-  boxShadow: "0 0 16px rgba(16, 185, 129, 0.4)"
+  boxShadow: "0 2px 8px var(--brand-glow)",
+  flexShrink: 0
+};
+
+const brandTitleStyle = {
+  fontWeight: "800",
+  fontSize: "17px",
+  color: "var(--text-primary)",
+  letterSpacing: "-0.02em"
+};
+
+const brandSubtitleStyle = {
+  fontSize: "11px",
+  color: "var(--text-muted)",
+  fontWeight: "500"
 };
 
 const v3BadgeStyle = {
-  backgroundColor: "rgba(16, 185, 129, 0.2)",
-  color: "#10b981",
+  backgroundColor: "var(--brand-light)",
+  color: "var(--brand-primary)",
   fontSize: "10px",
   fontWeight: "800",
   padding: "2px 6px",
@@ -252,18 +373,18 @@ const v3BadgeStyle = {
 
 const navContainerStyle = {
   flex: 1,
-  padding: "20px 12px",
+  padding: "16px 10px",
   display: "flex",
   flexDirection: "column",
-  gap: "4px",
+  gap: "3px",
   overflowY: "auto"
 };
 
 const navSectionLabelStyle = {
   fontSize: "10px",
   fontWeight: "700",
-  color: "var(--text-dim)",
-  padding: "8px 12px",
+  color: "var(--text-muted)",
+  padding: "8px 10px 4px",
   letterSpacing: "0.08em"
 };
 
@@ -271,33 +392,44 @@ const navButtonStyle = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  padding: "10px 14px",
+  padding: "9px 12px",
   borderRadius: "var(--radius-md)",
   fontSize: "13px",
   textAlign: "left",
   width: "100%",
+  border: "none",
+  cursor: "pointer",
   transition: "all 0.15s ease"
 };
 
 const userFooterStyle = {
   padding: "16px",
   borderTop: "1px solid var(--border-subtle)",
-  backgroundColor: "rgba(10, 17, 34, 0.4)"
+  backgroundColor: "var(--bg-surface-raised)"
 };
 
 const avatarStyle = {
   width: "36px",
   height: "36px",
   borderRadius: "50%",
-  backgroundColor: "#1e293b",
-  border: "1px solid #334155",
+  backgroundColor: "var(--brand-light)",
+  border: "1px solid var(--border-subtle)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "14px",
   fontWeight: "700",
-  color: "#10b981",
+  color: "var(--brand-primary)",
   flexShrink: 0
+};
+
+const userNameStyle = {
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "var(--text-primary)",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis"
 };
 
 const rolePillStyle = {
@@ -305,53 +437,42 @@ const rolePillStyle = {
   fontWeight: "700",
   padding: "2px 6px",
   borderRadius: "4px",
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
-  color: "#94a3b8"
-};
-
-const iconBtnStyle = {
-  backgroundColor: "var(--bg-card)",
-  border: "1px solid var(--border-subtle)",
-  borderRadius: "var(--radius-md)",
-  color: "#f8fafc",
-  padding: "8px 12px",
-  position: "relative"
-};
-
-const unreadBadgeStyle = {
-  backgroundColor: "#ef4444",
-  color: "#ffffff",
-  fontSize: "10px",
-  fontWeight: "700",
-  borderRadius: "50%",
-  padding: "1px 5px",
-  marginLeft: "4px"
+  backgroundColor: "var(--border-subtle)",
+  color: "var(--text-secondary)",
+  display: "inline-block",
+  marginTop: "2px"
 };
 
 const logoutBtnStyle = {
   flex: 1,
-  backgroundColor: "var(--bg-card)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-md)",
-  color: "#94a3b8",
+  color: "var(--text-secondary)",
   fontSize: "12px",
   fontWeight: "600",
-  padding: "8px"
+  padding: "8px",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
 };
 
 const mainContentStyle = {
   flex: 1,
   display: "flex",
   flexDirection: "column",
-  minWidth: 0
+  minWidth: 0,
+  minHeight: "100vh"
 };
 
 const topHeaderStyle = {
-  height: "72px",
-  padding: "0 32px",
+  height: "70px",
+  padding: "0 28px",
   borderBottom: "1px solid var(--border-subtle)",
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
-  backdropFilter: "blur(12px)",
+  backgroundColor: "var(--bg-surface)",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -360,18 +481,62 @@ const topHeaderStyle = {
   zIndex: 100
 };
 
+const headerTitleStyle = {
+  fontSize: "20px",
+  fontWeight: "700",
+  color: "var(--text-primary)",
+  margin: 0,
+  letterSpacing: "-0.01em"
+};
+
+const headerSubtitleStyle = {
+  fontSize: "12.5px",
+  color: "var(--text-muted)",
+  marginTop: "2px",
+  margin: 0
+};
+
+const headerNotificationBtnStyle = {
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px solid var(--border-subtle)",
+  borderRadius: "var(--radius-md)",
+  color: "var(--text-primary)",
+  padding: "8px 12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  cursor: "pointer",
+  fontWeight: "500",
+  position: "relative"
+};
+
+const unreadBadgeStyle = {
+  backgroundColor: "var(--color-red)",
+  color: "#ffffff",
+  fontSize: "10px",
+  fontWeight: "700",
+  borderRadius: "var(--radius-full)",
+  padding: "1px 6px",
+  marginLeft: "2px"
+};
+
 const ctaHeaderBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontWeight: "600",
   fontSize: "13px",
   padding: "8px 16px",
   borderRadius: "var(--radius-md)",
-  boxShadow: "0 2px 10px rgba(16, 185, 129, 0.3)"
+  boxShadow: "0 2px 10px var(--brand-glow)",
+  border: "none",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const childrenContainerStyle = {
   flex: 1,
-  padding: "32px",
+  padding: "28px",
   overflowY: "auto"
 };

@@ -12,9 +12,44 @@ import {
 } from "recharts";
 import AppShell from "../components/layout/AppShell";
 import { api } from "../services/api";
+import { useTheme } from "../context/ThemeContext";
+import {
+  Users,
+  Eye,
+  Zap,
+  Handshake,
+  Film,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  RefreshCw,
+  Unlink,
+  Copy,
+  Check,
+  FileText,
+  X,
+  AlertCircle,
+  ArrowRight,
+  TrendingUp,
+  Target,
+  Link2,
+  Calendar,
+  MessageSquare,
+  Heart
+} from "lucide-react";
 
 export default function CreatorStudio() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const chartStroke = isDark ? "#10b981" : "#059669";
+  const gridStroke = isDark ? "#1e293b" : "#e2e8f0";
+  const axisStroke = isDark ? "#64748b" : "#94a3b8";
+  const tooltipBg = isDark ? "#0f172a" : "#ffffff";
+  const tooltipBorder = isDark ? "#1e293b" : "#cbd5e1";
+  const tooltipText = isDark ? "#f8fafc" : "#0f172a";
+
   const [activeTab, setActiveTab] = useState("overview");
 
   // State
@@ -103,7 +138,7 @@ export default function CreatorStudio() {
     setActionLoading(true);
     try {
       await api.integrations.connectMock(platform);
-      alert(`Verified ${platform} Demo Channel connected! Metrics & content ingested ✅`);
+      alert(`Verified ${platform} Demo Channel connected! Metrics & content ingested.`);
       await loadStudioData();
     } catch (err) {
       alert("Failed to connect mock account: " + (err.message || ""));
@@ -116,7 +151,7 @@ export default function CreatorStudio() {
     setActionLoading(true);
     try {
       await api.integrations.sync(accountId);
-      alert("Account synchronized with latest platform data ✅");
+      alert("Account synchronized with latest platform data.");
       await loadStudioData();
     } catch (err) {
       alert("Sync failed: " + (err.message || ""));
@@ -130,7 +165,7 @@ export default function CreatorStudio() {
     setActionLoading(true);
     try {
       await api.integrations.disconnect(accountId);
-      alert("Account disconnected and credentials purged ✅");
+      alert("Account disconnected and credentials purged.");
       await loadStudioData();
     } catch (err) {
       alert("Failed to disconnect: " + (err.message || ""));
@@ -151,7 +186,7 @@ export default function CreatorStudio() {
     setActionLoading(true);
     try {
       await api.creator.signMou({ signatureData });
-      alert("MOU Agreement registered in Neon PostgreSQL! ✅");
+      alert("MOU Agreement registered in Neon PostgreSQL!");
       setShowMouModal(false);
       await loadStudioData();
     } catch (err) {
@@ -178,7 +213,7 @@ export default function CreatorStudio() {
         campaignId: applyingCampaign.id,
         pitch: pitchText
       });
-      alert("Application submitted! Collaboration workspace initialized 🚀");
+      alert("Application submitted! Collaboration workspace initialized.");
       setApplyingCampaign(null);
       setPitchText("");
       await loadStudioData();
@@ -229,17 +264,37 @@ export default function CreatorStudio() {
       }
     >
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚡</div>
-          Loading Creator Studio data from Neon PostgreSQL...
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: "var(--brand-light)",
+            color: "var(--brand-primary)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px"
+          }}>
+            <Zap size={24} />
+          </div>
+          <p style={{ fontSize: "14px", fontWeight: "500", margin: 0 }}>
+            Loading Creator Studio data from Neon PostgreSQL...
+          </p>
         </div>
       ) : (
         <div>
           {/* Top MOU Banner if not signed */}
           {profile && !profile.isMouSigned && (
             <div style={mouAlertBannerStyle}>
-              <div>
-                <strong style={{ color: "#f8fafc" }}>📄 Digital MOU Required:</strong> Sign the in-app creator agreement to unlock verified campaign applications.
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <FileText size={18} style={{ color: "var(--color-amber)", flexShrink: 0 }} />
+                <div>
+                  <strong style={{ color: "var(--text-primary)" }}>Digital MOU Required:</strong>{" "}
+                  <span style={{ color: "var(--text-secondary)" }}>
+                    Sign the in-app creator agreement to unlock verified campaign applications.
+                  </span>
+                </div>
               </div>
               <button onClick={() => setShowMouModal(true)} style={signMouBtnStyle}>
                 Sign MOU Agreement
@@ -257,7 +312,9 @@ export default function CreatorStudio() {
                 <div style={statCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={statLabelStyle}>TOTAL VERIFIED AUDIENCE</span>
-                    <span style={{ fontSize: "20px" }}>👥</span>
+                    <div style={{ ...statIconStyle, color: "var(--color-blue)", backgroundColor: "var(--color-blue-light)" }}>
+                      <Users size={18} />
+                    </div>
                   </div>
                   <div style={statNumberStyle}>
                     {(analytics?.totalAudience || 0).toLocaleString()}
@@ -269,7 +326,7 @@ export default function CreatorStudio() {
                       </span>
                     ))}
                     {integrations.length === 0 && (
-                      <span style={{ fontSize: "12px", color: "#64748b" }}>0 accounts connected</span>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>0 accounts connected</span>
                     )}
                   </div>
                 </div>
@@ -277,12 +334,14 @@ export default function CreatorStudio() {
                 <div style={statCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={statLabelStyle}>TOTAL VERIFIED VIEWS</span>
-                    <span style={{ fontSize: "20px" }}>👁️</span>
+                    <div style={{ ...statIconStyle, color: "var(--color-purple)", backgroundColor: "var(--color-purple-light)" }}>
+                      <Eye size={18} />
+                    </div>
                   </div>
                   <div style={statNumberStyle}>
                     {Number(analytics?.totalLifetimeViews || 0).toLocaleString()}
                   </div>
-                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                     Avg: {(analytics?.recentAvgViews || 0).toLocaleString()} views / video
                   </span>
                 </div>
@@ -290,12 +349,14 @@ export default function CreatorStudio() {
                 <div style={statCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={statLabelStyle}>AVG ENGAGEMENT RATE</span>
-                    <span style={{ fontSize: "20px" }}>⚡</span>
+                    <div style={{ ...statIconStyle, color: "var(--brand-primary)", backgroundColor: "var(--brand-light)" }}>
+                      <Zap size={18} />
+                    </div>
                   </div>
-                  <div style={{ ...statNumberStyle, color: "#10b981" }}>
+                  <div style={{ ...statNumberStyle, color: "var(--brand-primary)" }}>
                     {analytics?.aggregateEngagementRate || 0.0}%
                   </div>
-                  <span style={{ fontSize: "12px", color: "#10b981" }}>
+                  <span style={{ fontSize: "12px", color: "var(--brand-primary)" }}>
                     Verified from recent media activity
                   </span>
                 </div>
@@ -303,39 +364,43 @@ export default function CreatorStudio() {
                 <div style={statCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={statLabelStyle}>ACTIVE COLLABORATIONS</span>
-                    <span style={{ fontSize: "20px" }}>🤝</span>
+                    <div style={{ ...statIconStyle, color: "var(--color-amber)", backgroundColor: "var(--color-amber-light)" }}>
+                      <Handshake size={18} />
+                    </div>
                   </div>
                   <div style={statNumberStyle}>
                     {collaborations.filter((c) => !["COMPLETED", "REJECTED", "CANCELLED"].includes(c.status)).length}
                   </div>
-                  <span style={{ fontSize: "12px", color: "#38bdf8" }}>
+                  <span style={{ fontSize: "12px", color: "var(--color-blue)" }}>
                     {collaborations.length} total deals in pipeline
                   </span>
                 </div>
               </div>
 
               {/* Quick Actions & Recent Showcase */}
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", marginTop: "28px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "24px", marginTop: "28px" }}>
                 {/* Recent Content Showcase */}
                 <div style={cardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>
-                      🎬 Synchronized Content Highlights
+                    <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Film size={18} style={{ color: "var(--brand-primary)" }} />
+                      Synchronized Content Highlights
                     </h3>
                     <button onClick={() => setActiveTab("content")} style={viewAllBtnStyle}>
-                      View Content Library ({contents.length}) →
+                      View Library ({contents.length}) →
                     </button>
                   </div>
 
                   {contents.length === 0 ? (
                     <div style={emptyCardStyle}>
-                      <p>No videos or posts synchronized yet.</p>
+                      <Film size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                      <p style={{ margin: 0 }}>No videos or posts synchronized yet.</p>
                       <button onClick={() => setActiveTab("accounts")} style={primaryBtnSmallStyle}>
                         Connect Social Account
                       </button>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                       {contents.slice(0, 4).map((c) => (
                         <div key={c.id} style={contentRowStyle}>
                           <img
@@ -344,13 +409,19 @@ export default function CreatorStudio() {
                             style={thumbnailMiniStyle}
                           />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {c.title}
                             </div>
-                            <div style={{ fontSize: "12px", color: "#94a3b8", display: "flex", gap: "12px", marginTop: "4px" }}>
-                              <span>👁️ {c.viewCount.toLocaleString()} views</span>
-                              <span>❤️ {c.likeCount.toLocaleString()} likes</span>
-                              <span>💬 {c.commentCount.toLocaleString()} comments</span>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "12px", marginTop: "4px" }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <Eye size={12} /> {c.viewCount.toLocaleString()}
+                              </span>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <Heart size={12} /> {c.likeCount.toLocaleString()}
+                              </span>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <MessageSquare size={12} /> {c.commentCount.toLocaleString()}
+                              </span>
                             </div>
                           </div>
                           <a
@@ -359,7 +430,7 @@ export default function CreatorStudio() {
                             rel="noreferrer"
                             style={externalLinkBtnStyle}
                           >
-                            Watch ↗
+                            Watch <ExternalLink size={12} />
                           </a>
                         </div>
                       ))}
@@ -367,27 +438,36 @@ export default function CreatorStudio() {
                   )}
                 </div>
 
-                {/* Next Steps Card */}
+                {/* Studio Quick Links */}
                 <div style={cardStyle}>
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                    🚀 Studio Quick Links
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Sparkles size={18} style={{ color: "var(--color-amber)" }} />
+                    Studio Quick Links
                   </h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "16px" }}>
                     <button onClick={() => setActiveTab("accounts")} style={quickLinkItemStyle}>
-                      <span>🔗 Manage Connected Accounts</span>
-                      <span style={{ color: "#10b981" }}>{integrations.length} Active</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                        <Link2 size={16} /> Manage Connected Accounts
+                      </span>
+                      <span style={{ color: "var(--brand-primary)", fontWeight: "600" }}>{integrations.length} Active</span>
                     </button>
                     <button onClick={() => setActiveTab("opportunities")} style={quickLinkItemStyle}>
-                      <span>🎯 Discover Brand Opportunities</span>
-                      <span style={{ color: "#38bdf8" }}>{opportunities.length} Matched</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                        <Target size={16} /> Discover Brand Opportunities
+                      </span>
+                      <span style={{ color: "var(--color-blue)", fontWeight: "600" }}>{opportunities.length} Matched</span>
                     </button>
                     <button onClick={() => setActiveTab("mediakit")} style={quickLinkItemStyle}>
-                      <span>📄 View Automated Media Kit</span>
-                      <span style={{ color: "#8b5cf6" }}>Live</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                        <FileText size={16} /> View Automated Media Kit
+                      </span>
+                      <span style={{ color: "var(--color-purple)", fontWeight: "600" }}>Live</span>
                     </button>
                     <button onClick={() => setActiveTab("collaborations")} style={quickLinkItemStyle}>
-                      <span>🤝 Track Active Deliverables</span>
-                      <span style={{ color: "#f59e0b" }}>{collaborations.length} Deals</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                        <Handshake size={16} /> Track Active Deliverables
+                      </span>
+                      <span style={{ color: "var(--color-amber)", fontWeight: "600" }}>{collaborations.length} Deals</span>
                     </button>
                   </div>
                 </div>
@@ -401,10 +481,10 @@ export default function CreatorStudio() {
           {activeTab === "accounts" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                   Connected Social Accounts
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                   Connect your official creator accounts using standard OAuth. Lazarus never scrapes or requests passwords.
                 </p>
               </div>
@@ -415,10 +495,12 @@ export default function CreatorStudio() {
                 <div style={integrationCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, backgroundColor: "#ef4444" }}>▶️</div>
+                      <div style={{ ...providerIconStyle, backgroundColor: "#ef4444", color: "#ffffff" }}>
+                        <Film size={20} />
+                      </div>
                       <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>YouTube</h4>
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>Google OAuth 2.0 & Data API v3</span>
+                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>YouTube</h4>
+                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Google OAuth 2.0 & Data API v3</span>
                       </div>
                     </div>
                     {integrations.find((a) => a.platform === "YOUTUBE") ? (
@@ -437,19 +519,19 @@ export default function CreatorStudio() {
                             <div style={connectedAccountBoxStyle}>
                               <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
                               <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "#94a3b8" }}>@{acc.username}</div>
+                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                               </div>
                             </div>
-                            <div style={{ fontSize: "12px", color: "#64748b", margin: "10px 0" }}>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
                               Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
                             </div>
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                🔄 Re-Sync
+                                <RefreshCw size={12} /> Re-Sync
                               </button>
                               <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                Disconnect
+                                <Unlink size={12} /> Disconnect
                               </button>
                             </div>
                           </div>
@@ -458,7 +540,7 @@ export default function CreatorStudio() {
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5, marginBottom: "16px" }}>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
                         Import your YouTube subscriber counts, video library, and lifetime analytics with official Google authorization.
                       </p>
                       <button onClick={() => handleConnectOAuth("youtube")} style={connectBtnStyle}>
@@ -472,10 +554,12 @@ export default function CreatorStudio() {
                 <div style={integrationCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)" }}>📸</div>
+                      <div style={{ ...providerIconStyle, background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", color: "#ffffff" }}>
+                        <Film size={20} />
+                      </div>
                       <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>Instagram</h4>
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>Meta Graph API (Professional)</span>
+                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Instagram</h4>
+                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Meta Graph API (Professional)</span>
                       </div>
                     </div>
                     {integrations.find((a) => a.platform === "INSTAGRAM") ? (
@@ -494,19 +578,19 @@ export default function CreatorStudio() {
                             <div style={connectedAccountBoxStyle}>
                               <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
                               <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "#94a3b8" }}>@{acc.username}</div>
+                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                               </div>
                             </div>
-                            <div style={{ fontSize: "12px", color: "#64748b", margin: "10px 0" }}>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
                               Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
                             </div>
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                🔄 Re-Sync
+                                <RefreshCw size={12} /> Re-Sync
                               </button>
                               <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                Disconnect
+                                <Unlink size={12} /> Disconnect
                               </button>
                             </div>
                           </div>
@@ -515,7 +599,7 @@ export default function CreatorStudio() {
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5, marginBottom: "16px" }}>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
                         Authorize your Instagram Creator or Business account via Meta to verify followers, reels, and engagement rates.
                       </p>
                       <button onClick={() => handleConnectOAuth("instagram")} style={connectBtnStyle}>
@@ -529,10 +613,12 @@ export default function CreatorStudio() {
                 <div style={integrationCardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, backgroundColor: "#9146ff" }}>🟣</div>
+                      <div style={{ ...providerIconStyle, backgroundColor: "#9146ff", color: "#ffffff" }}>
+                        <Film size={20} />
+                      </div>
                       <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>Twitch</h4>
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>Twitch OAuth & Helix API</span>
+                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Twitch</h4>
+                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Twitch OAuth & Helix API</span>
                       </div>
                     </div>
                     {integrations.find((a) => a.platform === "TWITCH") ? (
@@ -551,19 +637,19 @@ export default function CreatorStudio() {
                             <div style={connectedAccountBoxStyle}>
                               <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
                               <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "#94a3b8" }}>@{acc.username}</div>
+                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                               </div>
                             </div>
-                            <div style={{ fontSize: "12px", color: "#64748b", margin: "10px 0" }}>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
                               Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
                             </div>
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                🔄 Re-Sync
+                                <RefreshCw size={12} /> Re-Sync
                               </button>
                               <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                Disconnect
+                                <Unlink size={12} /> Disconnect
                               </button>
                             </div>
                           </div>
@@ -572,7 +658,7 @@ export default function CreatorStudio() {
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5, marginBottom: "16px" }}>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
                         Authorize your Twitch channel to verify live broadcast history, follower metrics, and VOD statistics.
                       </p>
                       <button onClick={() => handleConnectOAuth("twitch")} style={connectBtnStyle}>
@@ -586,19 +672,20 @@ export default function CreatorStudio() {
               {/* Developer / Testing Notice & Quick Mock Connect */}
               <div style={testFixtureBoxStyle}>
                 <div>
-                  <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc" }}>
-                    🧪 Development & Evaluation Sandboxing
+                  <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <ShieldCheck size={18} style={{ color: "var(--brand-primary)" }} />
+                    Development & Evaluation Sandboxing
                   </h4>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px", margin: 0 }}>
                     If you do not have live Google/Meta OAuth client secrets configured, you can connect official mock fixtures to ingest verified channels, videos, and metrics directly into Neon PostgreSQL.
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <button onClick={() => handleConnectMock("YOUTUBE")} disabled={actionLoading} style={mockBtnStyle}>
-                    ⚡ Connect Verified YouTube Channel
+                    <Zap size={14} /> Connect Verified YouTube Channel
                   </button>
                   <button onClick={() => handleConnectMock("INSTAGRAM")} disabled={actionLoading} style={mockBtnStyle}>
-                    ⚡ Connect Verified Instagram Profile
+                    <Zap size={14} /> Connect Verified Instagram Profile
                   </button>
                 </div>
               </div>
@@ -611,43 +698,49 @@ export default function CreatorStudio() {
           {activeTab === "analytics" && (
             <div>
               <div style={{ marginBottom: "24px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                   Verified Cross-Platform Analytics
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                   Data snapshot trends calculated directly from connected platform APIs.
                 </p>
               </div>
 
               {/* Interactive Recharts Graph */}
               <div style={cardStyle}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                  📈 Audience Growth & Performance Snapshots
+                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <TrendingUp size={18} style={{ color: "var(--brand-primary)" }} />
+                  Audience Growth & Performance Snapshots
                 </h3>
 
                 {analytics?.historicalTrends && analytics.historicalTrends.length > 0 ? (
-                  <div style={{ width: "100%", height: 300 }}>
+                  <div style={{ width: "100%", height: 300, marginTop: "16px" }}>
                     <ResponsiveContainer>
                       <LineChart data={analytics.historicalTrends}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                        <XAxis dataKey="date" stroke="#64748b" />
-                        <YAxis stroke="#64748b" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                        <XAxis dataKey="date" stroke={axisStroke} />
+                        <YAxis stroke={axisStroke} />
                         <Tooltip
-                          contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px" }}
+                          contentStyle={{
+                            backgroundColor: tooltipBg,
+                            border: `1px solid ${tooltipBorder}`,
+                            borderRadius: "8px",
+                            color: tooltipText
+                          }}
                         />
                         <Line
                           type="monotone"
                           dataKey="followers"
                           name="Audience Reach"
-                          stroke="#10b981"
+                          stroke={chartStroke}
                           strokeWidth={2}
-                          dot={{ fill: "#10b981" }}
+                          dot={{ fill: chartStroke }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+                  <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
                     Connect accounts and perform a sync to build historical growth curves.
                   </div>
                 )}
@@ -655,7 +748,7 @@ export default function CreatorStudio() {
 
               {/* Platform Breakdown Table */}
               <div style={{ ...cardStyle, marginTop: "24px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0 }}>
                   Platform Breakdown
                 </h3>
                 <div style={{ overflowX: "auto" }}>
@@ -680,13 +773,13 @@ export default function CreatorStudio() {
                             <td style={tdStyle}>{p.displayName} (@{p.username})</td>
                             <td style={tdStyle}>{p.followerCount.toLocaleString()}</td>
                             <td style={tdStyle}>{Number(p.totalViews).toLocaleString()}</td>
-                            <td style={{ ...tdStyle, color: "#10b981", fontWeight: "600" }}>{p.engagementRate}%</td>
+                            <td style={{ ...tdStyle, color: "var(--brand-primary)", fontWeight: "600" }}>{p.engagementRate}%</td>
                             <td style={tdStyle}><span className="badge badge-green">Synced</span></td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
+                          <td colSpan={6} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
                             No platform accounts currently connected.
                           </td>
                         </tr>
@@ -703,12 +796,12 @@ export default function CreatorStudio() {
           ========================================================== */}
           {activeTab === "content" && (
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
                 <div>
-                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                     Unified Content Library
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                     {contents.length} synchronized media items from your connected channels.
                   </p>
                 </div>
@@ -721,8 +814,9 @@ export default function CreatorStudio() {
                       onClick={() => { setContentPlatform(p); loadContentLibrary(p); }}
                       style={{
                         ...filterPillStyle,
-                        backgroundColor: contentPlatform === p ? "#10b981" : "var(--bg-card)",
-                        color: contentPlatform === p ? "#ffffff" : "#94a3b8"
+                        backgroundColor: contentPlatform === p ? "var(--brand-primary)" : "var(--bg-surface-raised)",
+                        color: contentPlatform === p ? "#ffffff" : "var(--text-secondary)",
+                        borderColor: contentPlatform === p ? "var(--brand-primary)" : "var(--border-subtle)"
                       }}
                     >
                       {p}
@@ -733,7 +827,8 @@ export default function CreatorStudio() {
 
               {contents.length === 0 ? (
                 <div style={emptyCardStyle}>
-                  <p>No content records found for platform: {contentPlatform}</p>
+                  <Film size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No content records found for platform: {contentPlatform}</p>
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
@@ -771,7 +866,7 @@ export default function CreatorStudio() {
                           rel="noreferrer"
                           style={watchOnPlatformBtnStyle}
                         >
-                          Open on Platform ↗
+                          Open on Platform <ExternalLink size={12} />
                         </a>
                       </div>
                     </div>
@@ -787,17 +882,18 @@ export default function CreatorStudio() {
           {activeTab === "opportunities" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                   Explainable Opportunity Finder
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                   Brand campaigns ranked deterministically based on your verified audience reach, connected platforms, and content niches.
                 </p>
               </div>
 
               {opportunities.length === 0 ? (
                 <div style={emptyCardStyle}>
-                  <p>No open brand campaigns match your profile currently.</p>
+                  <Target size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No open brand campaigns match your profile currently.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -806,22 +902,22 @@ export default function CreatorStudio() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ fontSize: "13px", fontWeight: "700", color: "#94a3b8" }}>
+                            <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)" }}>
                               {opp.brandName}
                             </span>
                             {opp.isBrandVerified && <span className="badge badge-blue">Verified Brand</span>}
                           </div>
-                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginTop: "4px" }}>
+                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", marginTop: "4px", margin: "4px 0 0" }}>
                             {opp.title}
                           </h3>
                         </div>
 
                         {/* Match Score Badge */}
                         <div style={matchScoreContainerStyle}>
-                          <div style={{ fontSize: "24px", fontWeight: "800", color: opp.matchScore >= 80 ? "#10b981" : opp.matchScore >= 60 ? "#f59e0b" : "#94a3b8" }}>
+                          <div style={{ fontSize: "24px", fontWeight: "800", color: opp.matchScore >= 80 ? "var(--brand-primary)" : opp.matchScore >= 60 ? "var(--color-amber)" : "var(--text-muted)" }}>
                             {opp.matchScore}%
                           </div>
-                          <span style={{ fontSize: "10px", color: "#94a3b8", fontWeight: "700", letterSpacing: "0.04em" }}>
+                          <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "700", letterSpacing: "0.04em" }}>
                             MATCH SCORE
                           </span>
                         </div>
@@ -829,17 +925,18 @@ export default function CreatorStudio() {
 
                       {/* Explainable Rationale */}
                       <div style={explanationBannerStyle}>
-                        💡 <strong>Recommendation Rationale:</strong> {opp.explanation}
+                        <Sparkles size={14} style={{ flexShrink: 0 }} />
+                        <span><strong>Recommendation Rationale:</strong> {opp.explanation}</span>
                       </div>
 
-                      <p style={{ fontSize: "14px", color: "#cbd5e1", margin: "14px 0", lineHeight: 1.5 }}>
+                      <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: "14px 0", lineHeight: 1.5 }}>
                         {opp.description}
                       </p>
 
                       <div style={opportunityMetaGridStyle}>
                         <div>
                           <span style={oppMetaLabelStyle}>COMPENSATION</span>
-                          <div style={{ fontSize: "16px", fontWeight: "700", color: "#10b981" }}>
+                          <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--brand-primary)" }}>
                             ₹{opp.budget.toLocaleString()}
                           </div>
                         </div>
@@ -857,13 +954,13 @@ export default function CreatorStudio() {
                             {opp.targetPlatforms && opp.targetPlatforms.length > 0 ? (
                               opp.targetPlatforms.map((p) => <span key={p} style={nicheBadgeStyle}>{p}</span>)
                             ) : (
-                              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Any Platform</span>
+                              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Any Platform</span>
                             )}
                           </div>
                         </div>
                         <div>
                           <span style={oppMetaLabelStyle}>DELIVERABLES</span>
-                          <div style={{ fontSize: "13px", color: "#cbd5e1", marginTop: "2px" }}>
+                          <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "2px" }}>
                             {opp.deliverables}
                           </div>
                         </div>
@@ -879,7 +976,7 @@ export default function CreatorStudio() {
                                 onClick={() => navigate(`/collaborations/${opp.collaborationId}`)}
                                 style={openCollabBtnStyle}
                               >
-                                Open Collaboration Deal →
+                                Open Collaboration Deal <ArrowRight size={14} />
                               </button>
                             )}
                           </div>
@@ -888,7 +985,7 @@ export default function CreatorStudio() {
                             onClick={() => { setApplyingCampaign(opp); setPitchText(""); }}
                             style={applyBtnStyle}
                           >
-                            Apply to Opportunity →
+                            Apply to Opportunity <ArrowRight size={14} />
                           </button>
                         )}
                       </div>
@@ -904,19 +1001,27 @@ export default function CreatorStudio() {
           ========================================================== */}
           {activeTab === "mediakit" && (
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
                 <div>
-                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                     Automated Creator Media Kit
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                     Dynamic, shareable portfolio verified continuously against official platform APIs.
                   </p>
                 </div>
 
                 <div style={{ display: "flex", gap: "10px" }}>
                   <button onClick={copyMediaKitLink} style={btnSecondaryStyle}>
-                    {copySuccess ? "Link Copied! ✅" : "📋 Copy Shareable Link"}
+                    {copySuccess ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--brand-primary)" }}>
+                        <Check size={14} /> Link Copied!
+                      </span>
+                    ) : (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        <Copy size={14} /> Copy Shareable Link
+                      </span>
+                    )}
                   </button>
                   <a
                     href={`/media-kit/${profile?.id}`}
@@ -924,7 +1029,7 @@ export default function CreatorStudio() {
                     rel="noreferrer"
                     style={btnPrimaryStyle}
                   >
-                    Open Public View ↗
+                    Open Public View <ExternalLink size={14} style={{ marginLeft: "4px" }} />
                   </a>
                 </div>
               </div>
@@ -938,10 +1043,10 @@ export default function CreatorStudio() {
                         {mediaKit.name ? mediaKit.name[0].toUpperCase() : "C"}
                       </div>
                       <div>
-                        <h1 style={{ fontSize: "26px", fontWeight: "800", color: "#f8fafc" }}>
+                        <h1 style={{ fontSize: "24px", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>
                           {mediaKit.name}
                         </h1>
-                        <p style={{ color: "#94a3b8", fontSize: "14px", marginTop: "4px" }}>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px", margin: "4px 0 0" }}>
                           {mediaKit.bio}
                         </p>
                         <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
@@ -954,7 +1059,7 @@ export default function CreatorStudio() {
 
                     <div style={{ textAlign: "right" }}>
                       <span className="badge badge-green">Verified Creator Profile</span>
-                      <div style={{ fontSize: "12px", color: "#64748b", marginTop: "6px" }}>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px" }}>
                         Data Updated: {new Date(mediaKit.generatedAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -976,24 +1081,24 @@ export default function CreatorStudio() {
                     </div>
                     <div style={mediaKitStatItemStyle}>
                       <span style={statLabelStyle}>ENGAGEMENT RATE</span>
-                      <div style={{ ...statNumberStyle, color: "#10b981" }}>{mediaKit.engagementRate}%</div>
+                      <div style={{ ...statNumberStyle, color: "var(--brand-primary)" }}>{mediaKit.engagementRate}%</div>
                     </div>
                   </div>
 
                   {/* Top Content Showcase */}
                   <div style={{ marginTop: "32px" }}>
-                    <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                      🔥 Top Performing Content
+                    <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0 }}>
+                      Top Performing Content
                     </h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginTop: "16px" }}>
                       {mediaKit.topPerformingContent.map((c) => (
                         <div key={c.id} style={mediaKitContentCardStyle}>
                           <img src={c.thumbnailUrl} alt={c.title} style={{ width: "100%", height: "140px", objectFit: "cover" }} />
                           <div style={{ padding: "12px" }}>
-                            <div style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {c.title}
                             </div>
-                            <div style={{ fontSize: "12px", color: "#10b981", fontWeight: "600", marginTop: "4px" }}>
+                            <div style={{ fontSize: "12px", color: "var(--brand-primary)", fontWeight: "600", marginTop: "4px" }}>
                               {c.viewCount.toLocaleString()} views
                             </div>
                           </div>
@@ -1003,7 +1108,7 @@ export default function CreatorStudio() {
                   </div>
                 </div>
               ) : (
-                <p>Generating media kit...</p>
+                <p style={{ color: "var(--text-muted)" }}>Generating media kit...</p>
               )}
             </div>
           )}
@@ -1014,17 +1119,18 @@ export default function CreatorStudio() {
           {activeTab === "collaborations" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                   Brand Collaborations & Deals
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                   Track deliverable submissions, revisions, and approval milestones for all active sponsorships.
                 </p>
               </div>
 
               {collaborations.length === 0 ? (
                 <div style={emptyCardStyle}>
-                  <p>No active collaborations yet. Explore the Opportunity Finder to apply to open campaigns!</p>
+                  <Handshake size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No active collaborations yet. Explore the Opportunity Finder to apply to open campaigns!</p>
                   <button onClick={() => setActiveTab("opportunities")} style={primaryBtnSmallStyle}>
                     Explore Opportunities →
                   </button>
@@ -1035,10 +1141,10 @@ export default function CreatorStudio() {
                     <div key={collab.id} style={cardStyle}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
                         <div>
-                          <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
                             BRAND: {collab.campaign?.brandProfile?.companyName || "Brand Partner"}
                           </span>
-                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginTop: "2px" }}>
+                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", marginTop: "2px", margin: "2px 0 0" }}>
                             {collab.campaign?.title}
                           </h3>
                         </div>
@@ -1056,22 +1162,22 @@ export default function CreatorStudio() {
                         </span>
                       </div>
 
-                      <div style={{ display: "flex", gap: "24px", marginTop: "16px", padding: "12px 16px", backgroundColor: "rgba(10, 17, 34, 0.4)", borderRadius: "8px" }}>
+                      <div style={{ display: "flex", gap: "24px", marginTop: "16px", padding: "12px 16px", backgroundColor: "var(--bg-surface-raised)", borderRadius: "var(--radius-md)" }}>
                         <div>
                           <span style={statLabelStyle}>AGREED COMPENSATION</span>
-                          <div style={{ fontSize: "15px", fontWeight: "700", color: "#10b981" }}>
+                          <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--brand-primary)" }}>
                             ₹{collab.agreedAmount.toLocaleString()} {collab.currency}
                           </div>
                         </div>
                         <div>
                           <span style={statLabelStyle}>DELIVERABLES</span>
-                          <div style={{ fontSize: "13px", color: "#f8fafc" }}>
+                          <div style={{ fontSize: "13px", color: "var(--text-primary)" }}>
                             {collab.deliverables?.length || 0} milestones defined
                           </div>
                         </div>
                         <div>
                           <span style={statLabelStyle}>UPDATED</span>
-                          <div style={{ fontSize: "13px", color: "#94a3b8" }}>
+                          <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
                             {new Date(collab.updatedAt).toLocaleDateString()}
                           </div>
                         </div>
@@ -1082,7 +1188,7 @@ export default function CreatorStudio() {
                           onClick={() => navigate(`/collaborations/${collab.id}`)}
                           style={openCollabBtnStyle}
                         >
-                          Enter Collaboration Deal Room →
+                          Enter Collaboration Deal Room <ArrowRight size={14} />
                         </button>
                       </div>
                     </div>
@@ -1101,17 +1207,22 @@ export default function CreatorStudio() {
         <div style={modalOverlayStyle}>
           <div style={modalBoxStyle}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                 Apply to {applyingCampaign.brandName}
               </h3>
-              <button onClick={() => setApplyingCampaign(null)} style={{ color: "#94a3b8", fontSize: "18px" }}>✕</button>
+              <button
+                onClick={() => setApplyingCampaign(null)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "16px" }}>
-              Campaign: <strong>{applyingCampaign.title}</strong> (Budget: ₹{applyingCampaign.budget.toLocaleString()})
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "16px" }}>
+              Campaign: <strong style={{ color: "var(--text-primary)" }}>{applyingCampaign.title}</strong> (Budget: ₹{applyingCampaign.budget.toLocaleString()})
             </p>
 
-            <label style={{ fontSize: "12px", fontWeight: "600", color: "#cbd5e1", display: "block", marginBottom: "6px" }}>
+            <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>
               Your Collaboration Pitch & Deliverable Plan
             </label>
             <textarea
@@ -1119,7 +1230,17 @@ export default function CreatorStudio() {
               value={pitchText}
               onChange={(e) => setPitchText(e.target.value)}
               placeholder="Explain how you will integrate the sponsor's brand, your proposed format (e.g. dedicated review, shoutout), and timeline..."
-              style={{ width: "100%", marginBottom: "20px" }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-input)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                color: "var(--text-primary)",
+                fontSize: "13.5px",
+                outline: "none",
+                marginBottom: "20px"
+              }}
             />
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
@@ -1141,17 +1262,22 @@ export default function CreatorStudio() {
         <div style={modalOverlayStyle}>
           <div style={modalBoxStyle}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                 Sign Creator MOU Agreement
               </h3>
-              <button onClick={() => setShowMouModal(false)} style={{ color: "#94a3b8", fontSize: "18px" }}>✕</button>
+              <button
+                onClick={() => setShowMouModal(false)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "14px", lineHeight: 1.5 }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "14px", lineHeight: 1.5 }}>
               By signing below, you acknowledge the terms of the Lazarus Creator Network, agreeing to provide authentic deliverable metrics and uphold brand collaboration guidelines.
             </p>
 
-            <div style={{ border: "1px solid var(--border-subtle)", borderRadius: "8px", overflow: "hidden", backgroundColor: "#ffffff" }}>
+            <div style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden", backgroundColor: "#ffffff" }}>
               <SignatureCanvas
                 ref={sigCanvasRef}
                 penColor="#000000"
@@ -1167,7 +1293,7 @@ export default function CreatorStudio() {
                   sigCanvasRef.current?.clear();
                   setHasSignedMou(false);
                 }}
-                style={{ fontSize: "12px", color: "#ef4444" }}
+                style={{ fontSize: "12px", color: "var(--color-red)", background: "none", border: "none", cursor: "pointer" }}
               >
                 Clear Signature
               </button>
@@ -1177,7 +1303,7 @@ export default function CreatorStudio() {
                   Cancel
                 </button>
                 <button onClick={handleSaveSignature} disabled={actionLoading} style={btnPrimaryStyle}>
-                  {actionLoading ? "Saving..." : "Sign & Register Agreement ✅"}
+                  {actionLoading ? "Saving..." : "Sign & Register Agreement"}
                 </button>
               </div>
             </div>
@@ -1188,25 +1314,29 @@ export default function CreatorStudio() {
   );
 }
 
-// Styles
+// Styling Constants using Tokens
 const mouAlertBannerStyle = {
-  backgroundColor: "rgba(245, 158, 11, 0.12)",
+  backgroundColor: "var(--color-amber-light)",
   border: "1px solid rgba(245, 158, 11, 0.3)",
-  borderRadius: "10px",
+  borderRadius: "var(--radius-md)",
   padding: "14px 20px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  marginBottom: "24px"
+  marginBottom: "24px",
+  flexWrap: "wrap",
+  gap: "12px"
 };
 
 const signMouBtnStyle = {
-  background: "#f59e0b",
+  background: "var(--color-amber)",
   color: "#000000",
   fontWeight: "700",
   fontSize: "12px",
   padding: "8px 14px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-sm)",
+  border: "none",
+  cursor: "pointer"
 };
 
 const statGridStyle = {
@@ -1216,63 +1346,82 @@ const statGridStyle = {
 };
 
 const statCardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "20px"
+  padding: "20px",
+  boxShadow: "var(--shadow-sm)"
+};
+
+const statIconStyle = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "var(--radius-md)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
 };
 
 const statLabelStyle = {
   fontSize: "11px",
   fontWeight: "700",
-  color: "var(--text-dim)",
+  color: "var(--text-muted)",
   letterSpacing: "0.05em"
 };
 
 const statNumberStyle = {
-  fontSize: "28px",
+  fontSize: "26px",
   fontWeight: "800",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   margin: "8px 0"
 };
 
 const platformTagStyle = {
   fontSize: "11px",
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
-  color: "#cbd5e1",
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px solid var(--border-subtle)",
+  color: "var(--text-secondary)",
   padding: "2px 8px",
-  borderRadius: "4px"
+  borderRadius: "var(--radius-sm)"
 };
 
 const cardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const emptyCardStyle = {
   padding: "40px 20px",
   textAlign: "center",
-  color: "#94a3b8",
-  backgroundColor: "rgba(10, 17, 34, 0.3)",
-  borderRadius: "8px"
+  color: "var(--text-muted)",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
+  border: "1px dashed var(--border-subtle)"
 };
 
 const primaryBtnSmallStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontWeight: "600",
   fontSize: "13px",
   padding: "8px 16px",
-  borderRadius: "6px",
-  marginTop: "12px"
+  borderRadius: "var(--radius-md)",
+  marginTop: "12px",
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const viewAllBtnStyle = {
   fontSize: "13px",
   fontWeight: "600",
-  color: "#10b981"
+  color: "var(--brand-primary)",
+  background: "none",
+  border: "none",
+  cursor: "pointer"
 };
 
 const contentRowStyle = {
@@ -1280,8 +1429,8 @@ const contentRowStyle = {
   alignItems: "center",
   gap: "14px",
   padding: "10px",
-  borderRadius: "8px",
-  backgroundColor: "rgba(15, 23, 42, 0.4)",
+  borderRadius: "var(--radius-md)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)"
 };
 
@@ -1294,11 +1443,16 @@ const thumbnailMiniStyle = {
 
 const externalLinkBtnStyle = {
   fontSize: "12px",
-  color: "#10b981",
+  color: "var(--brand-primary)",
   fontWeight: "600",
-  padding: "6px 12px",
-  borderRadius: "6px",
-  border: "1px solid rgba(16, 185, 129, 0.3)"
+  padding: "6px 10px",
+  borderRadius: "var(--radius-sm)",
+  border: "1px solid var(--border-subtle)",
+  backgroundColor: "var(--bg-surface)",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px",
+  textDecoration: "none"
 };
 
 const quickLinkItemStyle = {
@@ -1306,19 +1460,22 @@ const quickLinkItemStyle = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "12px 14px",
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  borderRadius: "8px",
+  borderRadius: "var(--radius-md)",
   fontSize: "13px",
-  color: "#f8fafc",
-  fontWeight: "500"
+  color: "var(--text-primary)",
+  fontWeight: "500",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
 };
 
 const integrationCardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const providerIconStyle = {
@@ -1328,7 +1485,8 @@ const providerIconStyle = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "20px"
+  fontSize: "20px",
+  flexShrink: 0
 };
 
 const connectedAccountBoxStyle = {
@@ -1336,8 +1494,8 @@ const connectedAccountBoxStyle = {
   alignItems: "center",
   gap: "10px",
   padding: "10px 12px",
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
-  borderRadius: "8px",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
   border: "1px solid var(--border-subtle)"
 };
 
@@ -1349,36 +1507,49 @@ const miniAvatarStyle = {
 };
 
 const connectBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontWeight: "600",
   fontSize: "13px",
   padding: "10px 16px",
-  borderRadius: "8px",
-  width: "100%"
+  borderRadius: "var(--radius-md)",
+  width: "100%",
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const btnSmallOutlineStyle = {
   border: "1px solid var(--border-subtle)",
-  color: "#cbd5e1",
+  backgroundColor: "var(--bg-surface)",
+  color: "var(--text-secondary)",
   fontSize: "12px",
   padding: "6px 12px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px"
 };
 
 const btnSmallDangerStyle = {
   border: "1px solid rgba(239, 68, 68, 0.3)",
-  color: "#ef4444",
+  backgroundColor: "var(--bg-surface)",
+  color: "var(--color-red)",
   fontSize: "12px",
   padding: "6px 12px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px"
 };
 
 const testFixtureBoxStyle = {
   marginTop: "32px",
   padding: "24px",
-  backgroundColor: "rgba(19, 29, 53, 0.4)",
-  border: "1px dashed #334155",
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px dashed var(--border-medium)",
   borderRadius: "var(--radius-lg)",
   display: "flex",
   justifyContent: "space-between",
@@ -1388,13 +1559,17 @@ const testFixtureBoxStyle = {
 };
 
 const mockBtnStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
-  color: "#38bdf8",
+  color: "var(--color-blue)",
   fontWeight: "600",
   fontSize: "13px",
   padding: "10px 16px",
-  borderRadius: "8px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const tableStyle = {
@@ -1406,7 +1581,7 @@ const tableStyle = {
 const thStyle = {
   textAlign: "left",
   padding: "12px",
-  color: "#64748b",
+  color: "var(--text-muted)",
   borderBottom: "1px solid var(--border-subtle)",
   fontSize: "11px",
   fontWeight: "700",
@@ -1414,12 +1589,12 @@ const thStyle = {
 };
 
 const trStyle = {
-  borderBottom: "1px solid rgba(255, 255, 255, 0.04)"
+  borderBottom: "1px solid var(--border-subtle)"
 };
 
 const tdStyle = {
   padding: "14px 12px",
-  color: "#f8fafc"
+  color: "var(--text-primary)"
 };
 
 const filterPillStyle = {
@@ -1427,14 +1602,17 @@ const filterPillStyle = {
   borderRadius: "var(--radius-full)",
   fontSize: "12px",
   fontWeight: "600",
-  border: "1px solid var(--border-subtle)"
+  border: "1px solid var(--border-subtle)",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
 };
 
 const contentCardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  overflow: "hidden"
+  overflow: "hidden",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const contentThumbnailStyle = {
@@ -1447,7 +1625,7 @@ const contentPlatformBadgeStyle = {
   position: "absolute",
   top: "10px",
   left: "10px",
-  backgroundColor: "rgba(0, 0, 0, 0.8)",
+  backgroundColor: "rgba(0, 0, 0, 0.75)",
   color: "#ffffff",
   fontSize: "10px",
   fontWeight: "700",
@@ -1458,10 +1636,11 @@ const contentPlatformBadgeStyle = {
 const contentCardTitleStyle = {
   fontSize: "14px",
   fontWeight: "700",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   whiteSpace: "nowrap",
   overflow: "hidden",
-  textOverflow: "ellipsis"
+  textOverflow: "ellipsis",
+  margin: 0
 };
 
 const contentMetricsGridStyle = {
@@ -1470,58 +1649,66 @@ const contentMetricsGridStyle = {
   gap: "8px",
   marginTop: "12px",
   padding: "8px",
-  backgroundColor: "rgba(10, 17, 34, 0.5)",
+  backgroundColor: "var(--bg-surface-raised)",
   borderRadius: "6px"
 };
 
 const metricLabelStyle = {
   fontSize: "9px",
-  color: "#64748b",
+  color: "var(--text-muted)",
   fontWeight: "700"
 };
 
 const metricValStyle = {
   fontSize: "13px",
   fontWeight: "700",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   marginTop: "2px"
 };
 
 const watchOnPlatformBtnStyle = {
-  display: "block",
-  textAlign: "center",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
   marginTop: "14px",
   fontSize: "12px",
   fontWeight: "600",
-  color: "#10b981",
+  color: "var(--brand-primary)",
   padding: "8px",
-  borderRadius: "6px",
-  border: "1px solid rgba(16, 185, 129, 0.3)"
+  borderRadius: "var(--radius-sm)",
+  border: "1px solid var(--border-subtle)",
+  backgroundColor: "var(--bg-surface-raised)",
+  textDecoration: "none"
 };
 
 const opportunityCardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const matchScoreContainerStyle = {
   textAlign: "center",
   padding: "8px 16px",
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
-  borderRadius: "10px",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
   border: "1px solid var(--border-subtle)"
 };
 
 const explanationBannerStyle = {
   marginTop: "12px",
   padding: "10px 14px",
-  backgroundColor: "rgba(16, 185, 129, 0.08)",
-  border: "1px solid rgba(16, 185, 129, 0.2)",
-  borderRadius: "6px",
+  backgroundColor: "var(--brand-light)",
+  border: "1px solid rgba(16, 185, 129, 0.25)",
+  borderRadius: "var(--radius-sm)",
   fontSize: "13px",
-  color: "#34d399"
+  color: "var(--brand-primary)",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px"
 };
 
 const opportunityMetaGridStyle = {
@@ -1529,14 +1716,15 @@ const opportunityMetaGridStyle = {
   gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
   gap: "16px",
   padding: "14px",
-  backgroundColor: "rgba(10, 17, 34, 0.4)",
-  borderRadius: "8px"
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--border-subtle)"
 };
 
 const oppMetaLabelStyle = {
   fontSize: "10px",
   fontWeight: "700",
-  color: "var(--text-dim)",
+  color: "var(--text-muted)",
   letterSpacing: "0.04em"
 };
 
@@ -1544,55 +1732,72 @@ const nicheBadgeStyle = {
   fontSize: "11px",
   padding: "2px 8px",
   borderRadius: "4px",
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
-  color: "#cbd5e1"
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px solid var(--border-subtle)",
+  color: "var(--text-secondary)"
 };
 
 const applyBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontWeight: "600",
   fontSize: "13px",
   padding: "10px 18px",
-  borderRadius: "8px"
+  borderRadius: "var(--radius-md)",
+  border: "none",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const openCollabBtnStyle = {
   backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
-  color: "#38bdf8",
+  color: "var(--color-blue)",
   fontWeight: "600",
   fontSize: "13px",
   padding: "8px 14px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const btnSecondaryStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   fontSize: "13px",
   fontWeight: "600",
   padding: "8px 16px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer"
 };
 
 const btnPrimaryStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontSize: "13px",
   fontWeight: "600",
   padding: "8px 16px",
-  borderRadius: "6px",
+  borderRadius: "var(--radius-md)",
   display: "inline-flex",
-  alignItems: "center"
+  alignItems: "center",
+  border: "none",
+  cursor: "pointer",
+  textDecoration: "none",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const mediaKitContainerStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "32px"
+  padding: "32px",
+  boxShadow: "var(--shadow-md)"
 };
 
 const mediaKitHeaderStyle = {
@@ -1600,20 +1805,23 @@ const mediaKitHeaderStyle = {
   justifyContent: "space-between",
   alignItems: "center",
   paddingBottom: "24px",
-  borderBottom: "1px solid var(--border-subtle)"
+  borderBottom: "1px solid var(--border-subtle)",
+  flexWrap: "wrap",
+  gap: "16px"
 };
 
 const mediaKitAvatarStyle = {
   width: "64px",
   height: "64px",
   borderRadius: "50%",
-  background: "linear-gradient(135deg, #10b981 0%, #38bdf8 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--color-blue) 100%)",
   color: "#ffffff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "24px",
-  fontWeight: "800"
+  fontWeight: "800",
+  flexShrink: 0
 };
 
 const mediaKitStatsGridStyle = {
@@ -1625,14 +1833,14 @@ const mediaKitStatsGridStyle = {
 
 const mediaKitStatItemStyle = {
   padding: "16px",
-  backgroundColor: "rgba(10, 17, 34, 0.5)",
-  borderRadius: "8px",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
   border: "1px solid var(--border-subtle)"
 };
 
 const mediaKitContentCardStyle = {
-  backgroundColor: "var(--bg-surface)",
-  borderRadius: "8px",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
   overflow: "hidden",
   border: "1px solid var(--border-subtle)"
 };
@@ -1640,7 +1848,7 @@ const mediaKitContentCardStyle = {
 const modalOverlayStyle = {
   position: "fixed",
   inset: 0,
-  backgroundColor: "rgba(0,0,0,0.75)",
+  backgroundColor: "var(--bg-overlay)",
   backdropFilter: "blur(6px)",
   display: "flex",
   alignItems: "center",
@@ -1655,5 +1863,6 @@ const modalBoxStyle = {
   borderRadius: "var(--radius-lg)",
   width: "100%",
   maxWidth: "560px",
-  padding: "28px"
+  padding: "28px",
+  boxShadow: "var(--shadow-xl)"
 };

@@ -1,6 +1,22 @@
 import { useState, useEffect } from "react";
 import AppShell from "../components/layout/AppShell";
 import { api } from "../services/api";
+import {
+  ShieldCheck,
+  Users,
+  ScrollText,
+  Download,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Database,
+  Server,
+  Key,
+  RefreshCw,
+  Lock,
+  Layers,
+  FileSpreadsheet
+} from "lucide-react";
 
 export default function AdminStudio() {
   const [activeTab, setActiveTab] = useState("health");
@@ -37,7 +53,7 @@ export default function AdminStudio() {
     setActionLoading(true);
     try {
       await api.admin.toggleVerification(brandId, !currentStatus);
-      alert(`Brand verification set to ${!currentStatus} ✅`);
+      alert(`Brand verification set to ${!currentStatus}.`);
       await loadAdminData();
     } catch (err) {
       alert("Failed to toggle verification: " + (err.message || ""));
@@ -55,7 +71,7 @@ export default function AdminStudio() {
       a.href = url;
       a.download = `lazarus_gdpr_export_${Date.now()}.json`;
       a.click();
-      alert("GDPR data package exported successfully! 📦");
+      alert("GDPR data package exported successfully.");
     } catch (err) {
       alert("Export failed: " + (err.message || ""));
     }
@@ -75,8 +91,21 @@ export default function AdminStudio() {
       subtitle="Administrative oversight, sync monitoring, and compliance tools"
     >
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          Loading administrative console...
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: "var(--brand-light)",
+            color: "var(--brand-primary)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px"
+          }}>
+            <ShieldCheck size={24} />
+          </div>
+          <p style={{ margin: 0, fontSize: "14px", fontWeight: "500" }}>Loading administrative console...</p>
         </div>
       ) : (
         <div>
@@ -87,25 +116,25 @@ export default function AdminStudio() {
             <div>
               {/* System Status Indicators */}
               <div style={cardStyle}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                  🟢 Infrastructure Status
+                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Server size={18} style={{ color: "var(--brand-primary)" }} /> Infrastructure Status
                 </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginTop: "16px" }}>
                   <div style={statusItemStyle}>
                     <span style={statLabelStyle}>API STATUS</span>
-                    <div style={{ fontSize: "16px", fontWeight: "700", color: "#10b981" }}>Healthy (Express 5)</div>
+                    <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--brand-primary)", marginTop: "4px" }}>Healthy (Express 5)</div>
                   </div>
                   <div style={statusItemStyle}>
                     <span style={statLabelStyle}>HOSTED DATABASE</span>
-                    <div style={{ fontSize: "16px", fontWeight: "700", color: "#10b981" }}>Neon PostgreSQL 18.7</div>
+                    <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--brand-primary)", marginTop: "4px" }}>Neon PostgreSQL 18.7</div>
                   </div>
                   <div style={statusItemStyle}>
                     <span style={statLabelStyle}>TOKEN ENCRYPTION</span>
-                    <div style={{ fontSize: "16px", fontWeight: "700", color: "#10b981" }}>Active (AES-256-GCM)</div>
+                    <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--brand-primary)", marginTop: "4px" }}>Active (AES-256-GCM)</div>
                   </div>
                   <div style={statusItemStyle}>
                     <span style={statLabelStyle}>FAILED SYNCS</span>
-                    <div style={{ fontSize: "16px", fontWeight: "700", color: healthData?.stats?.failedSyncs > 0 ? "#ef4444" : "#10b981" }}>
+                    <div style={{ fontSize: "15px", fontWeight: "700", color: healthData?.stats?.failedSyncs > 0 ? "var(--color-red)" : "var(--brand-primary)", marginTop: "4px" }}>
                       {healthData?.stats?.failedSyncs || 0} Accounts
                     </div>
                   </div>
@@ -142,17 +171,17 @@ export default function AdminStudio() {
 
               {/* Failed Syncs Monitor */}
               <div style={{ ...cardStyle, marginTop: "24px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                  ⚠️ Failed Synchronisation Monitor ({healthData?.recentFailedSyncs?.length || 0})
+                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "16px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <AlertTriangle size={18} style={{ color: "var(--color-amber)" }} /> Failed Synchronisation Monitor ({healthData?.recentFailedSyncs?.length || 0})
                 </h3>
 
                 {healthData?.recentFailedSyncs && healthData.recentFailedSyncs.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "16px" }}>
                     {healthData.recentFailedSyncs.map((acc) => (
                       <div key={acc.id} style={failedSyncRowStyle}>
                         <div>
                           <strong>{acc.platform}</strong> — Creator: {acc.creatorProfile?.user?.name} ({acc.creatorProfile?.user?.email})
-                          <div style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+                          <div style={{ color: "var(--color-red)", fontSize: "12px", marginTop: "4px" }}>
                             Error: {acc.syncError}
                           </div>
                         </div>
@@ -161,129 +190,152 @@ export default function AdminStudio() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ padding: "20px", textAlign: "center", color: "#64748b" }}>
-                    All connected social platform accounts are synchronizing cleanly with zero failure alerts.
+                  <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", marginTop: "12px" }}>
+                    All connected social media accounts are syncing smoothly with 0 active failures.
                   </div>
                 )}
               </div>
-
-              {/* GDPR Privacy Download Button */}
-              <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
-                <button onClick={handleExportMyData} style={btnSecondaryStyle}>
-                  📦 Export My Account Data (GDPR Archive)
-                </button>
-              </div>
             </div>
           )}
 
           {/* =========================================================
-              TAB 2: USERS & VERIFICATIONS
+              TAB 2: USERS & BRAND VERIFICATION
           ========================================================== */}
           {activeTab === "users" && (
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                Registered Platform Users ({users.length})
-              </h3>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                    User Management & Brand Verification
+                  </h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                    Authorize genuine brand corporate profiles and inspect registered platform creators.
+                  </p>
+                </div>
+              </div>
 
-              <div style={{ overflowX: "auto" }}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Name</th>
-                      <th style={thStyle}>Email</th>
-                      <th style={thStyle}>Role</th>
-                      <th style={thStyle}>Verification / MOU</th>
-                      <th style={thStyle}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id} style={trStyle}>
-                        <td style={tdStyle}><strong>{u.name}</strong></td>
-                        <td style={tdStyle}>{u.email}</td>
-                        <td style={tdStyle}>
-                          <span className={`badge ${
-                            u.role === "BRAND" ? "badge-blue" : u.role === "ADMIN" ? "badge-purple" : "badge-green"
-                          }`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td style={tdStyle}>
-                          {u.brandProfile ? (
-                            u.brandProfile.isVerified ? (
-                              <span className="badge badge-green">Verified Brand</span>
-                            ) : (
-                              <span className="badge badge-gray">Unverified</span>
-                            )
-                          ) : u.creatorProfile ? (
-                            u.creatorProfile.isMouSigned ? (
-                              <span className="badge badge-green">MOU Signed</span>
-                            ) : (
-                              <span className="badge badge-amber">MOU Pending</span>
-                            )
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                        <td style={tdStyle}>
-                          {u.brandProfile && (
-                            <button
-                              onClick={() => handleToggleVerification(u.brandProfile.id, u.brandProfile.isVerified)}
-                              disabled={actionLoading}
-                              style={u.brandProfile.isVerified ? revokeVerifyBtnStyle : grantVerifyBtnStyle}
-                            >
-                              {u.brandProfile.isVerified ? "Revoke Verification" : "Grant Verification"}
-                            </button>
-                          )}
-                        </td>
+              <div style={cardStyle}>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={tableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>User</th>
+                        <th style={thStyle}>Role</th>
+                        <th style={thStyle}>Company / Details</th>
+                        <th style={thStyle}>Verification</th>
+                        <th style={thStyle}>Created At</th>
+                        <th style={thStyle}>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => {
+                        const brand = u.brandProfile;
+                        return (
+                          <tr key={u.id} style={trStyle}>
+                            <td style={tdStyle}>
+                              <strong>{u.name}</strong>
+                              <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{u.email}</div>
+                            </td>
+                            <td style={tdStyle}>
+                              <span className={`badge ${u.role === "BRAND" ? "badge-blue" : u.role === "ADMIN" ? "badge-purple" : "badge-green"}`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td style={tdStyle}>
+                              {brand?.companyName || u.creatorProfile?.bio || "—"}
+                            </td>
+                            <td style={tdStyle}>
+                              {brand ? (
+                                brand.isVerified ? (
+                                  <span className="badge badge-green">Verified Brand</span>
+                                ) : (
+                                  <span className="badge badge-gray">Unverified</span>
+                                )
+                              ) : u.creatorProfile ? (
+                                <span className="badge badge-green">Creator</span>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td style={tdStyle}>
+                              {new Date(u.createdAt).toLocaleDateString()}
+                            </td>
+                            <td style={tdStyle}>
+                              {brand && (
+                                <button
+                                  onClick={() => handleToggleVerification(brand.id, brand.isVerified)}
+                                  disabled={actionLoading}
+                                  style={brand.isVerified ? revokeVerifyBtnStyle : grantVerifyBtnStyle}
+                                >
+                                  {brand.isVerified ? "Revoke Verification" : "Grant Verified Badge"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {/* =========================================================
-              TAB 3: AUDIT LOGS
+              TAB 3: AUDIT TRAIL & GDPR
           ========================================================== */}
           {activeTab === "audit" && (
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                System Audit Events ({auditLogs.length})
-              </h3>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                    Security & Platform Audit Logs
+                  </h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                    Immutable action trail of state changes, account links, deliverable reviews, and security events.
+                  </p>
+                </div>
 
-              <div style={{ overflowX: "auto" }}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Timestamp</th>
-                      <th style={thStyle}>Actor</th>
-                      <th style={thStyle}>Action</th>
-                      <th style={thStyle}>Resource Type</th>
-                      <th style={thStyle}>Resource ID</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map((log) => (
-                      <tr key={log.id} style={trStyle}>
-                        <td style={{ ...tdStyle, color: "#64748b", fontSize: "12px" }}>
-                          {new Date(log.createdAt).toLocaleString()}
-                        </td>
-                        <td style={tdStyle}>
-                          {log.actor?.name || "System"} ({log.actor?.role || "AUTO"})
-                        </td>
-                        <td style={tdStyle}>
-                          <span style={codeBadgeStyle}>{log.action}</span>
-                        </td>
-                        <td style={tdStyle}>{log.resourceType}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8", fontSize: "12px" }}>
-                          {log.resourceId ? log.resourceId.slice(0, 12) + "..." : "-"}
-                        </td>
+                <button onClick={handleExportMyData} style={btnSecondaryStyle}>
+                  <Download size={14} /> Export Account Data Package (GDPR)
+                </button>
+              </div>
+
+              <div style={cardStyle}>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={tableStyle}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Timestamp</th>
+                        <th style={thStyle}>User</th>
+                        <th style={thStyle}>Action</th>
+                        <th style={thStyle}>Entity</th>
+                        <th style={thStyle}>Metadata</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {auditLogs.map((log) => (
+                        <tr key={log.id} style={trStyle}>
+                          <td style={{ ...tdStyle, whiteSpace: "nowrap", fontSize: "12px", color: "var(--text-muted)" }}>
+                            {new Date(log.createdAt).toLocaleString()}
+                          </td>
+                          <td style={tdStyle}>
+                            {log.user ? log.user.name : "System"}
+                          </td>
+                          <td style={tdStyle}>
+                            <span style={codeBadgeStyle}>{log.action}</span>
+                          </td>
+                          <td style={tdStyle}>
+                            {log.entityType ? `${log.entityType} (${log.entityId?.slice(0, 8)}...)` : "—"}
+                          </td>
+                          <td style={{ ...tdStyle, fontSize: "12px", color: "var(--text-muted)", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {JSON.stringify(log.metadata || {})}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -295,37 +347,39 @@ export default function AdminStudio() {
 
 // Styles
 const cardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const statusItemStyle = {
   padding: "14px",
-  backgroundColor: "rgba(10, 17, 34, 0.6)",
-  borderRadius: "8px",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
   border: "1px solid var(--border-subtle)"
 };
 
 const statLabelStyle = {
   fontSize: "10px",
   fontWeight: "700",
-  color: "var(--text-dim)",
+  color: "var(--text-muted)",
   letterSpacing: "0.06em"
 };
 
 const statCardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "16px"
+  padding: "16px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const statNumberStyle = {
   fontSize: "22px",
   fontWeight: "800",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   marginTop: "4px"
 };
 
@@ -334,9 +388,9 @@ const failedSyncRowStyle = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "12px 16px",
-  backgroundColor: "rgba(239, 68, 68, 0.06)",
-  border: "1px solid rgba(239, 68, 68, 0.2)",
-  borderRadius: "8px"
+  backgroundColor: "var(--color-red-light)",
+  border: "1px solid rgba(239, 68, 68, 0.25)",
+  borderRadius: "var(--radius-md)"
 };
 
 const tableStyle = {
@@ -348,55 +402,63 @@ const tableStyle = {
 const thStyle = {
   textAlign: "left",
   padding: "12px",
-  color: "#64748b",
+  color: "var(--text-muted)",
   borderBottom: "1px solid var(--border-subtle)",
   fontSize: "11px",
   fontWeight: "700"
 };
 
 const trStyle = {
-  borderBottom: "1px solid rgba(255, 255, 255, 0.04)"
+  borderBottom: "1px solid var(--border-subtle)"
 };
 
 const tdStyle = {
   padding: "12px",
-  color: "#f8fafc"
+  color: "var(--text-primary)"
 };
 
 const grantVerifyBtnStyle = {
-  backgroundColor: "rgba(16, 185, 129, 0.15)",
+  backgroundColor: "var(--brand-light)",
   border: "1px solid rgba(16, 185, 129, 0.3)",
-  color: "#10b981",
+  color: "var(--brand-primary)",
   fontSize: "12px",
   fontWeight: "600",
   padding: "4px 10px",
-  borderRadius: "4px"
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer"
 };
 
 const revokeVerifyBtnStyle = {
-  backgroundColor: "rgba(239, 68, 68, 0.15)",
+  backgroundColor: "var(--color-red-light)",
   border: "1px solid rgba(239, 68, 68, 0.3)",
-  color: "#ef4444",
+  color: "var(--color-red)",
   fontSize: "12px",
   fontWeight: "600",
   padding: "4px 10px",
-  borderRadius: "4px"
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer"
 };
 
 const btnSecondaryStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   fontSize: "13px",
   fontWeight: "600",
   padding: "10px 18px",
-  borderRadius: "8px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const codeBadgeStyle = {
   fontFamily: "var(--font-mono)",
   fontSize: "11px",
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px solid var(--border-subtle)",
   padding: "2px 6px",
-  borderRadius: "4px"
+  borderRadius: "4px",
+  color: "var(--text-primary)"
 };

@@ -2,6 +2,27 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import { api } from "../services/api";
+import {
+  Plus,
+  Megaphone,
+  Search,
+  Inbox,
+  Handshake,
+  ArrowRight,
+  ExternalLink,
+  X,
+  Filter,
+  Check,
+  CheckCircle2,
+  XCircle,
+  Building2,
+  Sparkles,
+  Users,
+  Eye,
+  Zap,
+  Calendar,
+  Layers
+} from "lucide-react";
 
 const NICHE_OPTIONS = [
   "tech", "ai", "finance", "fitness", "travel",
@@ -82,7 +103,7 @@ export default function BrandStudio() {
         minEngagementRate: campaignForm.minEngagementRate ? Number(campaignForm.minEngagementRate) : 0
       });
 
-      alert("Campaign brief published successfully 🚀");
+      alert("Campaign brief published successfully.");
       setShowCreateModal(false);
       setCampaignForm({
         title: "",
@@ -142,7 +163,7 @@ export default function BrandStudio() {
     setActionLoading(true);
     try {
       const res = await api.brand.updateApplication(selectedCampaign.id, appId, decision);
-      alert(`Application updated to ${decision} ✅`);
+      alert(`Application updated to ${decision}.`);
       const data = await api.brand.getApplicants(selectedCampaign.id);
       setApplicants(data || []);
       await loadBrandData();
@@ -193,8 +214,23 @@ export default function BrandStudio() {
       subtitle="Manage sponsor briefs, review verified creators, and approve deliverables"
     >
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          Loading Brand Studio data from Neon PostgreSQL...
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: "var(--brand-light)",
+            color: "var(--brand-primary)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px"
+          }}>
+            <Megaphone size={24} />
+          </div>
+          <p style={{ fontSize: "14px", fontWeight: "500", margin: 0 }}>
+            Loading Brand Studio data from Neon PostgreSQL...
+          </p>
         </div>
       ) : (
         <div>
@@ -203,25 +239,26 @@ export default function BrandStudio() {
           ========================================================== */}
           {activeTab === "campaigns" && (
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
                 <div>
-                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                     Active Brand Campaigns ({campaigns.length})
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
                     Campaigns with targeting requirements discoverable by matched creators.
                   </p>
                 </div>
 
                 <button onClick={() => setShowCreateModal(true)} style={primaryBtnStyle}>
-                  ➕ Create New Campaign Brief
+                  <Plus size={16} /> Create New Campaign Brief
                 </button>
               </div>
 
               {campaigns.length === 0 ? (
                 <div style={emptyCardStyle}>
-                  <p>No campaigns published yet.</p>
-                  <button onClick={() => setShowCreateModal(true)} style={primaryBtnStyle}>
+                  <Megaphone size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No campaigns published yet.</p>
+                  <button onClick={() => setShowCreateModal(true)} style={{ ...primaryBtnStyle, marginTop: "12px" }}>
                     Launch Your First Campaign
                   </button>
                 </div>
@@ -233,24 +270,24 @@ export default function BrandStudio() {
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span className="badge badge-green">{camp.status}</span>
-                            <span style={{ fontSize: "12px", color: "#64748b" }}>
+                            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                               Created {new Date(camp.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginTop: "6px" }}>
+                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "6px 0 0" }}>
                             {camp.title}
                           </h3>
                         </div>
 
                         <div style={{ textAlign: "right" }}>
                           <span style={statLabelStyle}>BUDGET</span>
-                          <div style={{ fontSize: "20px", fontWeight: "800", color: "#10b981" }}>
+                          <div style={{ fontSize: "20px", fontWeight: "800", color: "var(--brand-primary)" }}>
                             ₹{camp.budget.toLocaleString()}
                           </div>
                         </div>
                       </div>
 
-                      <p style={{ fontSize: "14px", color: "#cbd5e1", margin: "14px 0", lineHeight: 1.5 }}>
+                      <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: "14px 0", lineHeight: 1.5 }}>
                         {camp.description}
                       </p>
 
@@ -267,13 +304,13 @@ export default function BrandStudio() {
                             {camp.targetPlatforms && camp.targetPlatforms.length > 0 ? (
                               camp.targetPlatforms.map((p) => <span key={p} style={nicheBadgeStyle}>{p}</span>)
                             ) : (
-                              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Any</span>
+                              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Any</span>
                             )}
                           </div>
                         </div>
                         <div>
                           <span style={statLabelStyle}>APPLICANTS</span>
-                          <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc", marginTop: "2px" }}>
+                          <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)", marginTop: "2px" }}>
                             {camp.applicantsCount} Creators
                           </div>
                         </div>
@@ -287,7 +324,7 @@ export default function BrandStudio() {
                           }}
                           style={btnOutlineStyle}
                         >
-                          Review Applicants ({camp.applicantsCount}) →
+                          Review Applicants ({camp.applicantsCount}) <ArrowRight size={14} />
                         </button>
                       </div>
                     </div>
@@ -303,27 +340,28 @@ export default function BrandStudio() {
           {activeTab === "discovery" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                   Creator Discovery Catalog
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
-                  Search and evaluate verified creators across YouTube, Instagram, and Twitch.
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Explore verified creators with certified audience reach and authentic engagement rates.
                 </p>
               </div>
 
               {/* Search & Filter Bar */}
               <div style={searchFilterBarStyle}>
                 <input
+                  type="text"
+                  placeholder="Search creators by name or bio..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by creator name or bio keywords..."
-                  style={{ flex: 2 }}
+                  style={{ flex: 2, minWidth: "220px", padding: "10px 14px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", color: "var(--text-primary)" }}
                 />
 
                 <select
                   value={filterNiche}
                   onChange={(e) => setFilterNiche(e.target.value)}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: "140px", padding: "10px 14px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", color: "var(--text-primary)" }}
                 >
                   <option value="">All Niches</option>
                   {NICHE_OPTIONS.map((n) => (
@@ -334,7 +372,7 @@ export default function BrandStudio() {
                 <select
                   value={filterPlatform}
                   onChange={(e) => setFilterPlatform(e.target.value)}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: "140px", padding: "10px 14px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", color: "var(--text-primary)" }}
                 >
                   <option value="">All Platforms</option>
                   <option value="YOUTUBE">YouTube</option>
@@ -343,56 +381,67 @@ export default function BrandStudio() {
                 </select>
 
                 <button onClick={handleFilterCreators} disabled={actionLoading} style={filterBtnStyle}>
-                  🔍 Filter
+                  <Filter size={14} /> Filter
                 </button>
               </div>
 
-              {/* Creators Catalog Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px", marginTop: "24px" }}>
+              {/* Creators Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px", marginTop: "24px" }}>
                 {creators.map((c) => (
-                  <div key={c.creatorId} style={cardStyle}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                        <div style={avatarStyle}>{c.name[0]}</div>
-                        <div>
-                          <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>{c.name}</h4>
-                          <span style={{ fontSize: "12px", color: "#10b981", fontWeight: "600" }}>Verified Creator</span>
+                  <div key={c.id} style={cardStyle}>
+                    <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "14px" }}>
+                      <div style={avatarStyle}>
+                        {c.name ? c.name[0].toUpperCase() : "C"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {c.name}
                         </div>
+                        <span className="badge badge-green">Verified Creator</span>
                       </div>
                     </div>
 
-                    <p style={{ fontSize: "13px", color: "#94a3b8", margin: "12px 0", minHeight: "38px" }}>
-                      {c.bio}
+                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", minHeight: "38px", margin: "0 0 12px", lineHeight: 1.45 }}>
+                      {c.bio || "Content creator with verified cross-platform channel metrics."}
                     </p>
 
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "14px" }}>
                       {c.niches.map((n) => <span key={n} style={nicheBadgeStyle}>{n}</span>)}
                     </div>
 
                     <div style={creatorStatsBoxStyle}>
                       <div>
-                        <span style={statLabelStyle}>VERIFIED REACH</span>
-                        <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc" }}>
-                          {c.verifiedReach}
+                        <span style={statLabelStyle}>TOTAL AUDIENCE</span>
+                        <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
+                          {c.totalAudience.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <span style={statLabelStyle}>AVG VIEWS</span>
-                        <div style={{ fontSize: "14px", fontWeight: "700", color: "#38bdf8" }}>
-                          {c.avgViews}
+                        <span style={statLabelStyle}>ENGAGEMENT</span>
+                        <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--brand-primary)" }}>
+                          {c.engagementRate}%
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
                       <a
-                        href={`/media-kit/${c.creatorId}`}
+                        href={`/media-kit/${c.id}`}
                         target="_blank"
                         rel="noreferrer"
                         style={viewMediaKitBtnStyle}
                       >
-                        Inspect Verified Media Kit ↗
+                        Public Media Kit <ExternalLink size={12} />
                       </a>
+                      <button
+                        onClick={() => {
+                          setActiveTab("campaigns");
+                          setShowCreateModal(true);
+                        }}
+                        style={primaryBtnStyle}
+                      >
+                        Target Campaign
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -406,137 +455,128 @@ export default function BrandStudio() {
           {activeTab === "applications" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
-                  Creator Applications
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                  Application Management
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
-                  Review creator pitches and transition into structured collaborations.
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Select a campaign to evaluate creator pitches, match scores, and initiate collaboration deal rooms.
                 </p>
               </div>
 
-              {/* Select Campaign Dropdown if not selected */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={statLabelStyle}>SELECT ACTIVE CAMPAIGN:</label>
-                <select
-                  value={selectedCampaign?.id || ""}
-                  onChange={(e) => {
-                    const c = campaigns.find((x) => x.id === e.target.value);
-                    if (c) handleSelectCampaign(c);
-                  }}
-                  style={{ maxWidth: "400px", display: "block", marginTop: "6px" }}
-                >
-                  <option value="">-- Choose Campaign to View Applicants --</option>
-                  {campaigns.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title} ({c.applicantsCount} applicants)</option>
-                  ))}
-                </select>
+              {/* Campaign Picker */}
+              <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "12px", marginBottom: "16px" }}>
+                {campaigns.map((camp) => (
+                  <button
+                    key={camp.id}
+                    onClick={() => handleSelectCampaign(camp)}
+                    style={{
+                      ...campaignPickerBtnStyle,
+                      backgroundColor: selectedCampaign?.id === camp.id ? "var(--brand-light)" : "var(--bg-surface)",
+                      borderColor: selectedCampaign?.id === camp.id ? "var(--brand-primary)" : "var(--border-subtle)",
+                      color: selectedCampaign?.id === camp.id ? "var(--brand-primary)" : "var(--text-secondary)"
+                    }}
+                  >
+                    <span style={{ fontWeight: "600" }}>{camp.title}</span>
+                    <span className="badge badge-gray">{camp.applicantsCount}</span>
+                  </button>
+                ))}
               </div>
 
-              {selectedCampaign && (
-                <div>
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "16px" }}>
-                    Applicants for: "{selectedCampaign.title}" ({applicants.length})
-                  </h3>
-
-                  {applicants.length === 0 ? (
-                    <div style={emptyCardStyle}>
-                      <p>No creators have applied to this campaign yet.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      {applicants.map((app) => (
-                        <div key={app.applicationId} style={cardStyle}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-                            <div>
-                              <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>
-                                {app.name}
-                              </h4>
-                              <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-                                {app.niches.map((n) => <span key={n} style={nicheBadgeStyle}>{n}</span>)}
-                              </div>
-                            </div>
-
-                            <span className={`badge ${
-                              app.status === "ACCEPTED" ? "badge-green" : app.status === "REJECTED" ? "badge-red" : "badge-blue"
-                            }`}>
-                              {app.status}
+              {!selectedCampaign ? (
+                <div style={emptyCardStyle}>
+                  <p>Select a campaign above to view applicants.</p>
+                </div>
+              ) : applicants.length === 0 ? (
+                <div style={emptyCardStyle}>
+                  <Inbox size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No creator applications received yet for this campaign.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {applicants.map((app) => (
+                    <div key={app.id} style={cardStyle}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <div style={avatarStyle}>
+                            {app.creatorName ? app.creatorName[0].toUpperCase() : "C"}
+                          </div>
+                          <div>
+                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                              {app.creatorName}
+                            </h4>
+                            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                              Applied: {new Date(app.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-
-                          {/* Creator Pitch */}
-                          <div style={pitchBoxStyle}>
-                            <strong style={{ color: "#38bdf8", fontSize: "12px" }}>Creator Pitch:</strong>
-                            <p style={{ fontSize: "13px", color: "#f8fafc", marginTop: "4px", lineHeight: 1.5 }}>
-                              {app.pitch || "No written pitch attached."}
-                            </p>
-                          </div>
-
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
-                            <a
-                              href={`/media-kit/${app.creatorId}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{ fontSize: "13px", color: "#10b981", fontWeight: "600" }}
-                            >
-                              Inspect Media Kit ↗
-                            </a>
-
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              {app.status !== "ACCEPTED" && (
-                                <button
-                                  onClick={() => handleDecision(app.applicationId, "ACCEPTED")}
-                                  disabled={actionLoading}
-                                  style={acceptBtnStyle}
-                                >
-                                  ✅ Accept & Begin Deal
-                                </button>
-                              )}
-                              {app.status !== "SHORTLISTED" && app.status !== "ACCEPTED" && (
-                                <button
-                                  onClick={() => handleDecision(app.applicationId, "SHORTLISTED")}
-                                  disabled={actionLoading}
-                                  style={btnOutlineStyle}
-                                >
-                                  ⭐ Shortlist
-                                </button>
-                              )}
-                              {app.status !== "REJECTED" && (
-                                <button
-                                  onClick={() => handleDecision(app.applicationId, "REJECTED")}
-                                  disabled={actionLoading}
-                                  style={rejectBtnStyle}
-                                >
-                                  Reject
-                                </button>
-                              )}
-                            </div>
-                          </div>
                         </div>
-                      ))}
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span className={`badge ${app.status === "ACCEPTED" ? "badge-green" : app.status === "REJECTED" ? "badge-red" : "badge-amber"}`}>
+                            {app.status}
+                          </span>
+                          <a
+                            href={`/media-kit/${app.creatorProfileId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={btnOutlineStyle}
+                          >
+                            View Media Kit <ExternalLink size={12} />
+                          </a>
+                        </div>
+                      </div>
+
+                      {app.pitch && (
+                        <div style={pitchBoxStyle}>
+                          <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)" }}>CREATOR'S PITCH:</span>
+                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "4px 0 0", lineHeight: 1.45 }}>
+                            "{app.pitch}"
+                          </p>
+                        </div>
+                      )}
+
+                      {app.status === "PENDING" && (
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "16px" }}>
+                          <button
+                            onClick={() => handleDecision(app.id, "REJECTED")}
+                            disabled={actionLoading}
+                            style={rejectBtnStyle}
+                          >
+                            <XCircle size={14} /> Decline
+                          </button>
+                          <button
+                            onClick={() => handleDecision(app.id, "ACCEPTED")}
+                            disabled={actionLoading}
+                            style={acceptBtnStyle}
+                          >
+                            <CheckCircle2 size={14} /> Accept & Start Deal Room
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
           )}
 
           {/* =========================================================
-              TAB 4: COLLABORATIONS
+              TAB 4: COLLABORATIONS & DELIVERABLES
           ========================================================== */}
           {activeTab === "collaborations" && (
             <div>
               <div style={{ marginBottom: "20px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#f8fafc" }}>
-                  Active Brand Collaborations
+                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                  Brand Collaborations & Deals
                 </h2>
-                <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
-                  Review submitted creator deliverables, request revisions, and issue approvals.
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Active deal rooms where you can review deliverable submissions, request revisions, and issue milestone approvals.
                 </p>
               </div>
 
               {collaborations.length === 0 ? (
                 <div style={emptyCardStyle}>
-                  <p>No active collaborations currently in progress.</p>
+                  <Handshake size={32} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                  <p style={{ margin: 0 }}>No active collaborations yet. Review and accept creator applications to launch deal rooms.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -544,27 +584,54 @@ export default function BrandStudio() {
                     <div key={collab.id} style={cardStyle}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
                         <div>
-                          <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>
-                            CREATOR: {collab.creatorProfile?.user?.name}
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
+                            CREATOR: {collab.creatorProfile?.user?.name || "Creator"}
                           </span>
-                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginTop: "2px" }}>
+                          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "2px 0 0" }}>
                             {collab.campaign?.title}
                           </h3>
                         </div>
 
                         <span className={`badge ${
-                          collab.status === "COMPLETED" ? "badge-green" : "badge-blue"
+                          collab.status === "COMPLETED"
+                            ? "badge-green"
+                            : collab.status === "IN_PROGRESS" || collab.status === "SUBMITTED"
+                            ? "badge-blue"
+                            : collab.status === "REVISION_REQUESTED"
+                            ? "badge-amber"
+                            : "badge-purple"
                         }`}>
                           {collab.status.replace("_", " ")}
                         </span>
                       </div>
 
+                      <div style={{ display: "flex", gap: "24px", marginTop: "16px", padding: "12px 16px", backgroundColor: "var(--bg-surface-raised)", borderRadius: "var(--radius-md)" }}>
+                        <div>
+                          <span style={statLabelStyle}>AGREED COMPENSATION</span>
+                          <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--brand-primary)" }}>
+                            ₹{collab.agreedAmount.toLocaleString()} {collab.currency}
+                          </div>
+                        </div>
+                        <div>
+                          <span style={statLabelStyle}>DELIVERABLES</span>
+                          <div style={{ fontSize: "13px", color: "var(--text-primary)" }}>
+                            {collab.deliverables?.length || 0} milestones defined
+                          </div>
+                        </div>
+                        <div>
+                          <span style={statLabelStyle}>LAST UPDATED</span>
+                          <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                            {new Date(collab.updatedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
                       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
                         <button
                           onClick={() => navigate(`/collaborations/${collab.id}`)}
-                          style={primaryBtnStyle}
+                          style={btnOutlineStyle}
                         >
-                          Enter Deal Room & Review Deliverables →
+                          Enter Collaboration Deal Room <ArrowRight size={14} />
                         </button>
                       </div>
                     </div>
@@ -577,118 +644,134 @@ export default function BrandStudio() {
       )}
 
       {/* =========================================================
-          MODAL: CREATE CAMPAIGN BRIEF
+          MODAL: CREATE CAMPAIGN
       ========================================================== */}
       {showCreateModal && (
         <div style={modalOverlayStyle}>
           <div style={modalBoxStyle}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc" }}>
-                Launch New Brand Campaign Brief
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                Launch New Brand Campaign
               </h3>
-              <button onClick={() => setShowCreateModal(false)} style={{ color: "#94a3b8", fontSize: "18px" }}>✕</button>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <form onSubmit={handleCreateCampaign} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <form onSubmit={handleCreateCampaign} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={statLabelStyle}>CAMPAIGN TITLE</label>
+                <label style={labelStyle}>Campaign Title</label>
                 <input
+                  type="text"
+                  required
+                  placeholder="e.g. Q4 AI Productivity Tool Launch Sponsorship"
                   value={campaignForm.title}
                   onChange={(e) => setCampaignForm({ ...campaignForm, title: e.target.value })}
-                  placeholder="e.g. Q4 AI Developer Tool Integration"
-                  required
+                  style={inputStyle}
                 />
               </div>
 
               <div>
-                <label style={statLabelStyle}>CAMPAIGN DESCRIPTION & BRIEF</label>
+                <label style={labelStyle}>Campaign Description & Deliverable Brief</label>
                 <textarea
-                  rows={3}
+                  rows={4}
+                  required
+                  placeholder="Detail the target objective, sponsor call to action, talking points, and deliverable format..."
                   value={campaignForm.description}
                   onChange={(e) => setCampaignForm({ ...campaignForm, description: e.target.value })}
-                  placeholder="Explain your product, target audience, and key talking points..."
-                  required
+                  style={inputStyle}
                 />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={statLabelStyle}>COMPENSATION BUDGET (INR)</label>
+                  <label style={labelStyle}>Total Budget (INR)</label>
                   <input
                     type="number"
+                    required
+                    placeholder="e.g. 50000"
                     value={campaignForm.budget}
                     onChange={(e) => setCampaignForm({ ...campaignForm, budget: e.target.value })}
-                    placeholder="75000"
-                    required
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label style={statLabelStyle}>MIN VERIFIED FOLLOWERS</label>
+                  <label style={labelStyle}>Deliverables Requirement</label>
                   <input
-                    type="number"
-                    value={campaignForm.minFollowers}
-                    onChange={(e) => setCampaignForm({ ...campaignForm, minFollowers: e.target.value })}
-                    placeholder="10000"
+                    type="text"
+                    placeholder="e.g. 1 Dedicated YouTube Video + 1 Reel"
+                    value={campaignForm.deliverables}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, deliverables: e.target.value })}
+                    style={inputStyle}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={statLabelStyle}>DELIVERABLES SPECIFICATION</label>
-                <input
-                  value={campaignForm.deliverables}
-                  onChange={(e) => setCampaignForm({ ...campaignForm, deliverables: e.target.value })}
-                  placeholder="e.g. 1x Dedicated 10-minute YouTube Review + 1x Short clip"
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={statLabelStyle}>TARGET NICHES</label>
+                <label style={labelStyle}>Target Niches (Select all that apply)</label>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
-                  {NICHE_OPTIONS.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => toggleNiche(n)}
-                      style={{
-                        ...nicheToggleBtnStyle,
-                        backgroundColor: campaignForm.niches.includes(n) ? "#10b981" : "var(--bg-input)",
-                        color: campaignForm.niches.includes(n) ? "#ffffff" : "#94a3b8"
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                  {NICHE_OPTIONS.map((n) => {
+                    const isSelected = campaignForm.niches.includes(n);
+                    return (
+                      <button
+                        type="button"
+                        key={n}
+                        onClick={() => toggleNiche(n)}
+                        style={{
+                          ...nicheToggleBtnStyle,
+                          backgroundColor: isSelected ? "var(--brand-primary)" : "var(--bg-surface-raised)",
+                          color: isSelected ? "#ffffff" : "var(--text-secondary)",
+                          borderColor: isSelected ? "var(--brand-primary)" : "var(--border-subtle)"
+                        }}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div>
-                <label style={statLabelStyle}>TARGET PLATFORMS</label>
+                <label style={labelStyle}>Target Platforms</label>
                 <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                  {["YOUTUBE", "INSTAGRAM", "TWITCH"].map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => togglePlatform(p)}
-                      style={{
-                        ...nicheToggleBtnStyle,
-                        backgroundColor: campaignForm.targetPlatforms.includes(p) ? "#38bdf8" : "var(--bg-input)",
-                        color: campaignForm.targetPlatforms.includes(p) ? "#ffffff" : "#94a3b8"
-                      }}
-                    >
-                      {p}
-                    </button>
-                  ))}
+                  {["YOUTUBE", "INSTAGRAM", "TWITCH"].map((p) => {
+                    const isSelected = campaignForm.targetPlatforms.includes(p);
+                    return (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => togglePlatform(p)}
+                        style={{
+                          ...nicheToggleBtnStyle,
+                          backgroundColor: isSelected ? "var(--brand-primary)" : "var(--bg-surface-raised)",
+                          color: isSelected ? "#ffffff" : "var(--text-secondary)",
+                          borderColor: isSelected ? "var(--brand-primary)" : "var(--border-subtle)"
+                        }}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "16px" }}>
-                <button type="button" onClick={() => setShowCreateModal(false)} style={btnSecondaryStyle}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  style={btnSecondaryStyle}
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={actionLoading} style={primaryBtnStyle}>
-                  {actionLoading ? "Publishing..." : "Publish Campaign Brief 🚀"}
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  style={primaryBtnStyle}
+                >
+                  {actionLoading ? "Publishing..." : "Publish Campaign Brief"}
                 </button>
               </div>
             </form>
@@ -701,34 +784,41 @@ export default function BrandStudio() {
 
 // Styles
 const primaryBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
-  fontWeight: "700",
+  fontWeight: "600",
   fontSize: "13px",
-  padding: "10px 18px",
-  borderRadius: "8px",
-  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
+  padding: "9px 16px",
+  borderRadius: "var(--radius-md)",
+  boxShadow: "0 2px 8px var(--brand-glow)",
+  border: "none",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const cardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const emptyCardStyle = {
   padding: "40px",
   textAlign: "center",
-  color: "#94a3b8",
-  backgroundColor: "rgba(10, 17, 34, 0.4)",
-  borderRadius: "8px"
+  color: "var(--text-muted)",
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
+  border: "1px dashed var(--border-subtle)"
 };
 
 const statLabelStyle = {
   fontSize: "11px",
   fontWeight: "700",
-  color: "var(--text-dim)",
+  color: "var(--text-muted)",
   letterSpacing: "0.05em"
 };
 
@@ -737,25 +827,33 @@ const campaignMetaBoxStyle = {
   gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
   gap: "16px",
   padding: "12px 16px",
-  backgroundColor: "rgba(10, 17, 34, 0.5)",
-  borderRadius: "8px"
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--border-subtle)"
 };
 
 const nicheBadgeStyle = {
   fontSize: "11px",
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
-  color: "#cbd5e1",
+  backgroundColor: "var(--bg-surface-raised)",
+  border: "1px solid var(--border-subtle)",
+  color: "var(--text-secondary)",
   padding: "2px 8px",
-  borderRadius: "4px"
+  borderRadius: "var(--radius-sm)"
 };
 
 const btnOutlineStyle = {
   border: "1px solid var(--border-subtle)",
-  color: "#cbd5e1",
+  backgroundColor: "var(--bg-surface-raised)",
+  color: "var(--text-primary)",
   fontSize: "13px",
   fontWeight: "600",
   padding: "8px 14px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  textDecoration: "none"
 };
 
 const searchFilterBarStyle = {
@@ -763,32 +861,39 @@ const searchFilterBarStyle = {
   gap: "12px",
   flexWrap: "wrap",
   padding: "16px",
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
-  borderRadius: "var(--radius-lg)"
+  borderRadius: "var(--radius-lg)",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const filterBtnStyle = {
-  background: "#10b981",
+  background: "var(--brand-primary)",
   color: "#ffffff",
   fontWeight: "600",
   fontSize: "13px",
   padding: "10px 18px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  border: "none",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const avatarStyle = {
   width: "40px",
   height: "40px",
   borderRadius: "50%",
-  backgroundColor: "#1e293b",
-  border: "1px solid #334155",
+  backgroundColor: "var(--brand-light)",
+  border: "1px solid var(--border-subtle)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "16px",
   fontWeight: "700",
-  color: "#10b981"
+  color: "var(--brand-primary)",
+  flexShrink: 0
 };
 
 const creatorStatsBoxStyle = {
@@ -796,40 +901,55 @@ const creatorStatsBoxStyle = {
   gridTemplateColumns: "1fr 1fr",
   gap: "8px",
   padding: "10px",
-  backgroundColor: "rgba(10, 17, 34, 0.5)",
-  borderRadius: "6px"
+  backgroundColor: "var(--bg-surface-raised)",
+  borderRadius: "var(--radius-md)"
 };
 
 const viewMediaKitBtnStyle = {
   fontSize: "12px",
-  color: "#10b981",
-  fontWeight: "600"
+  color: "var(--brand-primary)",
+  fontWeight: "600",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px",
+  textDecoration: "none"
 };
 
 const pitchBoxStyle = {
   marginTop: "12px",
   padding: "12px",
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  borderRadius: "8px"
+  borderRadius: "var(--radius-md)"
 };
 
 const acceptBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontSize: "12px",
   fontWeight: "600",
   padding: "8px 14px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  border: "none",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const rejectBtnStyle = {
   border: "1px solid rgba(239, 68, 68, 0.3)",
-  color: "#ef4444",
+  backgroundColor: "var(--bg-surface)",
+  color: "var(--color-red)",
   fontSize: "12px",
   fontWeight: "600",
   padding: "8px 14px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px"
 };
 
 const nicheToggleBtnStyle = {
@@ -837,23 +957,39 @@ const nicheToggleBtnStyle = {
   borderRadius: "var(--radius-full)",
   fontSize: "12px",
   fontWeight: "600",
-  border: "1px solid var(--border-subtle)"
+  border: "1px solid var(--border-subtle)",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
+};
+
+const campaignPickerBtnStyle = {
+  padding: "8px 14px",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--border-subtle)",
+  fontSize: "13px",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
 };
 
 const btnSecondaryStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   fontSize: "13px",
   fontWeight: "600",
   padding: "8px 16px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer"
 };
 
 const modalOverlayStyle = {
   position: "fixed",
   inset: 0,
-  backgroundColor: "rgba(0,0,0,0.75)",
+  backgroundColor: "var(--bg-overlay)",
   backdropFilter: "blur(6px)",
   display: "flex",
   alignItems: "center",
@@ -870,5 +1006,25 @@ const modalBoxStyle = {
   maxWidth: "600px",
   maxHeight: "90vh",
   overflowY: "auto",
-  padding: "28px"
+  padding: "28px",
+  boxShadow: "var(--shadow-xl)"
+};
+
+const labelStyle = {
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "var(--text-secondary)",
+  display: "block",
+  marginBottom: "6px"
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px 14px",
+  backgroundColor: "var(--bg-input)",
+  border: "1px solid var(--border-subtle)",
+  borderRadius: "var(--radius-md)",
+  color: "var(--text-primary)",
+  fontSize: "13.5px",
+  outline: "none"
 };

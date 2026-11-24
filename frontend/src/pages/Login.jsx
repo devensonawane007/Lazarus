@@ -1,6 +1,19 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../services/api";
+import ThemeToggle from "../components/ui/ThemeToggle";
+import {
+  ArrowLeft,
+  Zap,
+  AlertCircle,
+  Palette,
+  Building2,
+  ArrowRight,
+  User,
+  Mail,
+  Lock,
+  Building
+} from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -77,26 +90,30 @@ export default function Login() {
 
   return (
     <div style={containerStyle}>
-      {/* Back to Home Link */}
-      <div style={{ position: "absolute", top: "24px", left: "32px" }}>
+      {/* Top Navigation Bar */}
+      <div style={topNavStyle}>
         <button
           onClick={() => navigate("/")}
-          style={{ color: "#94a3b8", fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}
+          style={backBtnStyle}
         >
-          ← Back to Lazarus Home
+          <ArrowLeft size={16} />
+          <span>Back to Lazarus Home</span>
         </button>
+        <ThemeToggle />
       </div>
 
       <div style={cardStyle}>
         {/* Brand Header */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={logoIconStyle}>⚡</div>
-          <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#f8fafc", marginTop: "12px", letterSpacing: "-0.02em" }}>
-            Lazarus <span style={{ color: "#10b981" }}>V3</span>
+        <div style={{ textAlign: "center", marginBottom: "26px" }}>
+          <div style={logoIconStyle}>
+            <Zap size={22} color="#ffffff" />
+          </div>
+          <h2 style={cardHeadingStyle}>
+            Lazarus <span style={{ color: "var(--brand-primary)" }}>V3</span>
           </h2>
-          <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+          <p style={cardSubtitleStyle}>
             {isRegistering
-              ? "Create your account to unlock verified analytics & brand deals"
+              ? "Create your account to unlock verified analytics & brand opportunities"
               : "Sign in to access your Creator or Brand Studio"}
           </p>
         </div>
@@ -108,9 +125,10 @@ export default function Login() {
             onClick={() => { setIsRegistering(false); setErrorMessage(""); }}
             style={{
               ...tabButtonStyle,
-              backgroundColor: !isRegistering ? "var(--bg-card)" : "transparent",
-              color: !isRegistering ? "#f8fafc" : "#94a3b8",
-              fontWeight: !isRegistering ? "700" : "500"
+              backgroundColor: !isRegistering ? "var(--bg-surface)" : "transparent",
+              color: !isRegistering ? "var(--text-primary)" : "var(--text-secondary)",
+              fontWeight: !isRegistering ? "700" : "500",
+              boxShadow: !isRegistering ? "var(--shadow-sm)" : "none"
             }}
           >
             Sign In
@@ -120,9 +138,10 @@ export default function Login() {
             onClick={() => { setIsRegistering(true); setErrorMessage(""); }}
             style={{
               ...tabButtonStyle,
-              backgroundColor: isRegistering ? "var(--bg-card)" : "transparent",
-              color: isRegistering ? "#f8fafc" : "#94a3b8",
-              fontWeight: isRegistering ? "700" : "500"
+              backgroundColor: isRegistering ? "var(--bg-surface)" : "transparent",
+              color: isRegistering ? "var(--text-primary)" : "var(--text-secondary)",
+              fontWeight: isRegistering ? "700" : "500",
+              boxShadow: isRegistering ? "var(--shadow-sm)" : "none"
             }}
           >
             Create Account
@@ -132,7 +151,8 @@ export default function Login() {
         {/* Error Notification */}
         {errorMessage && (
           <div style={errorBannerStyle}>
-            ⚠️ {errorMessage}
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -147,24 +167,26 @@ export default function Login() {
                   onClick={() => setRole("creator")}
                   style={{
                     ...roleBtnStyle,
-                    borderColor: form.role === "creator" ? "#10b981" : "var(--border-subtle)",
-                    backgroundColor: form.role === "creator" ? "var(--primary-light)" : "var(--bg-input)",
-                    color: form.role === "creator" ? "#10b981" : "#94a3b8"
+                    borderColor: form.role === "creator" ? "var(--brand-primary)" : "var(--border-subtle)",
+                    backgroundColor: form.role === "creator" ? "var(--brand-light)" : "var(--bg-surface-raised)",
+                    color: form.role === "creator" ? "var(--brand-primary)" : "var(--text-secondary)"
                   }}
                 >
-                  <span style={{ fontSize: "16px" }}>🎨</span> Creator
+                  <Palette size={16} />
+                  <span>Creator</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole("brand")}
                   style={{
                     ...roleBtnStyle,
-                    borderColor: form.role === "brand" ? "#10b981" : "var(--border-subtle)",
-                    backgroundColor: form.role === "brand" ? "var(--primary-light)" : "var(--bg-input)",
-                    color: form.role === "brand" ? "#10b981" : "#94a3b8"
+                    borderColor: form.role === "brand" ? "var(--brand-primary)" : "var(--border-subtle)",
+                    backgroundColor: form.role === "brand" ? "var(--brand-light)" : "var(--bg-surface-raised)",
+                    color: form.role === "brand" ? "var(--brand-primary)" : "var(--text-secondary)"
                   }}
                 >
-                  <span style={{ fontSize: "16px" }}>🏢</span> Brand Partner
+                  <Building2 size={16} />
+                  <span>Brand Partner</span>
                 </button>
               </div>
             </div>
@@ -173,51 +195,67 @@ export default function Login() {
           {isRegistering && (
             <div>
               <label style={labelStyle}>Full Name / Creator Handle</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="e.g. Alex Rivera"
-                required
-              />
+              <div style={inputWrapperStyle}>
+                <User size={16} style={inputIconStyle} />
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="e.g. Alex Rivera"
+                  required
+                  style={inputStyle}
+                />
+              </div>
             </div>
           )}
 
           {isRegistering && form.role === "brand" && (
             <div>
               <label style={labelStyle}>Company / Brand Name</label>
-              <input
-                name="companyName"
-                value={form.companyName}
-                onChange={handleChange}
-                placeholder="e.g. NextGen Software Inc"
-                required
-              />
+              <div style={inputWrapperStyle}>
+                <Building size={16} style={inputIconStyle} />
+                <input
+                  name="companyName"
+                  value={form.companyName}
+                  onChange={handleChange}
+                  placeholder="e.g. NextGen Software Inc"
+                  required
+                  style={inputStyle}
+                />
+              </div>
             </div>
           )}
 
           <div>
             <label style={labelStyle}>Email Address</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="creator@lazarus.io"
-              required
-            />
+            <div style={inputWrapperStyle}>
+              <Mail size={16} style={inputIconStyle} />
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="creator@lazarus.io"
+                required
+                style={inputStyle}
+              />
+            </div>
           </div>
 
           <div>
             <label style={labelStyle}>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
+            <div style={inputWrapperStyle}>
+              <Lock size={16} style={inputIconStyle} />
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                style={inputStyle}
+              />
+            </div>
           </div>
 
           <button
@@ -225,14 +263,21 @@ export default function Login() {
             disabled={loading}
             style={{
               ...submitBtnStyle,
-              opacity: loading ? 0.7 : 1
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? "not-allowed" : "pointer"
             }}
           >
-            {loading
-              ? "Authenticating with Neon PostgreSQL..."
-              : isRegistering
-              ? "Create Lazarus Account 🚀"
-              : "Sign In to Studio →"}
+            {loading ? (
+              <span>Authenticating with Neon PostgreSQL...</span>
+            ) : isRegistering ? (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                Create Lazarus Account <ArrowRight size={16} />
+              </span>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                Sign In to Studio <ArrowRight size={16} />
+              </span>
+            )}
           </button>
         </form>
       </div>
@@ -244,10 +289,35 @@ const containerStyle = {
   minHeight: "100vh",
   backgroundColor: "var(--bg-canvas)",
   display: "flex",
+  flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
   padding: "24px",
   position: "relative"
+};
+
+const topNavStyle = {
+  position: "absolute",
+  top: "24px",
+  left: "32px",
+  right: "32px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center"
+};
+
+const backBtnStyle = {
+  color: "var(--text-secondary)",
+  fontSize: "13.5px",
+  fontWeight: "600",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  padding: "6px 0",
+  transition: "color 0.15s ease"
 };
 
 const cardStyle = {
@@ -264,17 +334,31 @@ const logoIconStyle = {
   width: "44px",
   height: "44px",
   borderRadius: "12px",
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "22px",
-  boxShadow: "0 0 20px rgba(16, 185, 129, 0.4)"
+  boxShadow: "0 4px 12px var(--brand-glow)"
+};
+
+const cardHeadingStyle = {
+  fontSize: "24px",
+  fontWeight: "800",
+  color: "var(--text-primary)",
+  marginTop: "12px",
+  letterSpacing: "-0.02em"
+};
+
+const cardSubtitleStyle = {
+  fontSize: "13px",
+  color: "var(--text-muted)",
+  marginTop: "4px",
+  lineHeight: 1.45
 };
 
 const tabContainerStyle = {
   display: "flex",
-  backgroundColor: "var(--bg-input)",
+  backgroundColor: "var(--bg-surface-raised)",
   borderRadius: "var(--radius-md)",
   padding: "4px",
   border: "1px solid var(--border-subtle)",
@@ -286,6 +370,8 @@ const tabButtonStyle = {
   padding: "8px",
   borderRadius: "6px",
   fontSize: "13px",
+  border: "none",
+  cursor: "pointer",
   transition: "all 0.15s ease"
 };
 
@@ -293,7 +379,7 @@ const labelStyle = {
   display: "block",
   fontSize: "12px",
   fontWeight: "600",
-  color: "#cbd5e1",
+  color: "var(--text-secondary)",
   marginBottom: "6px"
 };
 
@@ -307,26 +393,59 @@ const roleBtnStyle = {
   alignItems: "center",
   justifyContent: "center",
   gap: "8px",
+  cursor: "pointer",
   transition: "all 0.15s ease"
 };
 
+const inputWrapperStyle = {
+  position: "relative",
+  display: "flex",
+  alignItems: "center"
+};
+
+const inputIconStyle = {
+  position: "absolute",
+  left: "12px",
+  color: "var(--text-muted)",
+  pointerEvents: "none"
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px 14px 10px 38px",
+  backgroundColor: "var(--bg-input)",
+  border: "1px solid var(--border-subtle)",
+  borderRadius: "var(--radius-md)",
+  color: "var(--text-primary)",
+  fontSize: "13.5px",
+  outline: "none",
+  transition: "border-color 0.15s ease, box-shadow 0.15s ease"
+};
+
 const submitBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
   fontWeight: "700",
   fontSize: "14px",
   padding: "12px",
   borderRadius: "var(--radius-md)",
   marginTop: "12px",
-  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
+  boxShadow: "0 4px 14px var(--brand-glow)",
+  border: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
 };
 
 const errorBannerStyle = {
-  backgroundColor: "rgba(239, 68, 68, 0.12)",
+  backgroundColor: "var(--color-red-light)",
   border: "1px solid rgba(239, 68, 68, 0.3)",
-  color: "#ef4444",
+  color: "var(--color-red)",
   padding: "10px 14px",
   borderRadius: "var(--radius-md)",
   fontSize: "13px",
-  marginBottom: "16px"
+  marginBottom: "16px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px"
 };

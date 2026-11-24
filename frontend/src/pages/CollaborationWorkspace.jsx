@@ -2,6 +2,22 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import { api } from "../services/api";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  AlertTriangle,
+  UploadCloud,
+  Check,
+  ExternalLink,
+  FileText,
+  Sparkles,
+  Coins,
+  Megaphone,
+  Palette,
+  X,
+  Clock,
+  ArrowRight
+} from "lucide-react";
 
 const STAGES = [
   "APPLIED",
@@ -59,7 +75,7 @@ export default function CollaborationWorkspace() {
     setActionLoading(true);
     try {
       await api.collaborations.transition(id, targetStatus, note);
-      alert(`Deal progressed to ${targetStatus} ✅`);
+      alert(`Deal progressed to ${targetStatus}.`);
       await loadCollaboration();
     } catch (err) {
       alert("Transition failed: " + (err.message || ""));
@@ -80,7 +96,7 @@ export default function CollaborationWorkspace() {
         submissionUrl,
         notes: submissionNotes
       });
-      alert("Deliverable submitted for sponsor review! 🚀");
+      alert("Deliverable submitted for sponsor review.");
       setSubmittingDeliv(null);
       setSubmissionUrl("");
       setSubmissionNotes("");
@@ -99,7 +115,7 @@ export default function CollaborationWorkspace() {
         decision: reviewDecision,
         feedback: reviewFeedback
       });
-      alert(`Deliverable marked as ${reviewDecision} ✅`);
+      alert(`Deliverable marked as ${reviewDecision}.`);
       setReviewingDeliv(null);
       setReviewFeedback("");
       await loadCollaboration();
@@ -118,26 +134,39 @@ export default function CollaborationWorkspace() {
       subtitle={`Collaboration between ${collab?.creatorProfile?.user?.name || "Creator"} & ${collab?.brandProfile?.companyName || "Brand"}`}
     >
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          Loading collaboration workspace...
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: "var(--brand-light)",
+            color: "var(--brand-primary)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px"
+          }}>
+            <Sparkles size={24} />
+          </div>
+          <p style={{ margin: 0, fontSize: "14px", fontWeight: "500" }}>Loading collaboration workspace...</p>
         </div>
       ) : !collab ? (
-        <p>Collaboration not found.</p>
+        <p style={{ color: "var(--text-secondary)" }}>Collaboration not found.</p>
       ) : (
         <div>
           {/* Back Button */}
           <div style={{ marginBottom: "16px" }}>
             <button
               onClick={() => navigate(-1)}
-              style={{ color: "#94a3b8", fontSize: "13px", fontWeight: "600" }}
+              style={backBtnStyle}
             >
-              ← Back to Dashboard
+              <ArrowLeft size={16} /> Back to Dashboard
             </button>
           </div>
 
           {/* 10-Stage Progress Lifecycle Bar */}
           <div style={lifecycleBarStyle}>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "12px", letterSpacing: "0.06em" }}>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "12px", letterSpacing: "0.06em" }}>
               DEAL EXECUTION LIFECYCLE
             </div>
             <div style={stagePillsContainerStyle}>
@@ -150,9 +179,9 @@ export default function CollaborationWorkspace() {
                     key={st}
                     style={{
                       ...stagePillStyle,
-                      backgroundColor: isCurrent ? "#10b981" : isPassed ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.05)",
-                      color: isCurrent ? "#ffffff" : isPassed ? "#34d399" : "#64748b",
-                      border: isCurrent ? "1px solid #10b981" : "1px solid transparent",
+                      backgroundColor: isCurrent ? "var(--brand-primary)" : isPassed ? "var(--brand-light)" : "var(--bg-surface-raised)",
+                      color: isCurrent ? "#ffffff" : isPassed ? "var(--brand-primary)" : "var(--text-muted)",
+                      border: isCurrent ? "1px solid var(--brand-primary)" : "1px solid var(--border-subtle)",
                       fontWeight: isCurrent ? "700" : "500"
                     }}
                   >
@@ -164,13 +193,14 @@ export default function CollaborationWorkspace() {
           </div>
 
           {/* Deal Metadata Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", marginTop: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px", marginTop: "24px" }}>
             {/* Left Column: Deliverables & Milestones */}
-            <div>
+            <div style={{ gridColumn: "span 2" }}>
               <div style={cardStyle}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc" }}>
-                    📋 Agreed Deliverables ({collab.deliverables?.length || 0})
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <FileText size={18} style={{ color: "var(--brand-primary)" }} />
+                    Agreed Deliverables ({collab.deliverables?.length || 0})
                   </h3>
 
                   {/* Stage Transition Buttons */}
@@ -181,26 +211,26 @@ export default function CollaborationWorkspace() {
                         disabled={actionLoading}
                         style={primaryBtnStyle}
                       >
-                        🚀 Mark In Progress
+                        <Sparkles size={14} /> Mark In Progress
                       </button>
                     )}
                   </div>
                 </div>
 
                 {collab.deliverables?.length === 0 ? (
-                  <div style={{ padding: "30px", textAlign: "center", color: "#94a3b8" }}>
+                  <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", backgroundColor: "var(--bg-surface-raised)", borderRadius: "var(--radius-md)" }}>
                     No specific deliverables defined. Brand terms: {collab.deliverableTerms}
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     {collab.deliverables.map((deliv) => (
                       <div key={deliv.id} style={deliverableCardStyle}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
                           <div>
-                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>
+                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
                               {deliv.title}
                             </h4>
-                            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+                            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px", margin: "4px 0 0" }}>
                               {deliv.description}
                             </p>
                           </div>
@@ -221,19 +251,19 @@ export default function CollaborationWorkspace() {
                         {/* Submission Link & Review Notes */}
                         {deliv.submissionUrl && (
                           <div style={submissionBoxStyle}>
-                            <div style={{ fontSize: "12px", color: "#38bdf8", fontWeight: "600" }}>
-                              Submitted Asset Link:
+                            <div style={{ fontSize: "12px", color: "var(--color-blue)", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <UploadCloud size={14} /> Submitted Asset Link:
                             </div>
                             <a
                               href={deliv.submissionUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#f8fafc", fontSize: "13px", wordBreak: "break-all" }}
+                              style={{ color: "var(--text-primary)", fontSize: "13px", wordBreak: "break-all", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "4px" }}
                             >
-                              {deliv.submissionUrl} ↗
+                              {deliv.submissionUrl} <ExternalLink size={12} />
                             </a>
                             {deliv.notes && (
-                              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+                              <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px", margin: "4px 0 0" }}>
                                 Note: {deliv.notes}
                               </p>
                             )}
@@ -243,8 +273,10 @@ export default function CollaborationWorkspace() {
                         {/* Brand Feedback if Changes Requested */}
                         {deliv.brandFeedback && (
                           <div style={feedbackBoxStyle}>
-                            <strong style={{ color: "#f59e0b", fontSize: "12px" }}>Brand Revision Notes:</strong>
-                            <p style={{ fontSize: "13px", color: "#f8fafc", marginTop: "2px" }}>
+                            <strong style={{ color: "var(--color-amber)", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <AlertTriangle size={14} /> Brand Revision Notes:
+                            </strong>
+                            <p style={{ fontSize: "13px", color: "var(--text-primary)", marginTop: "2px", margin: "2px 0 0" }}>
                               {deliv.brandFeedback}
                             </p>
                           </div>
@@ -257,7 +289,7 @@ export default function CollaborationWorkspace() {
                               onClick={() => { setSubmittingDeliv(deliv); setSubmissionUrl(deliv.submissionUrl || ""); }}
                               style={primaryBtnStyle}
                             >
-                              📤 Submit Deliverable Link
+                              <UploadCloud size={14} /> Submit Deliverable Link
                             </button>
                           )}
 
@@ -266,7 +298,7 @@ export default function CollaborationWorkspace() {
                               onClick={() => setReviewingDeliv(deliv)}
                               style={primaryBtnStyle}
                             >
-                              🔍 Review & Approve / Request Changes
+                              <CheckCircle2 size={14} /> Review & Approve / Request Changes
                             </button>
                           )}
                         </div>
@@ -281,50 +313,50 @@ export default function CollaborationWorkspace() {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {/* Commercial Terms */}
               <div style={cardStyle}>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc", marginBottom: "14px" }}>
-                  💰 Commercial Terms
+                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Coins size={16} style={{ color: "var(--brand-primary)" }} /> Commercial Terms
                 </h4>
-                <div style={{ padding: "12px", backgroundColor: "rgba(10, 17, 34, 0.6)", borderRadius: "8px" }}>
+                <div style={{ padding: "14px", backgroundColor: "var(--bg-surface-raised)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
                   <span style={statLabelStyle}>TOTAL AGREED COMPENSATION</span>
-                  <div style={{ fontSize: "24px", fontWeight: "800", color: "#10b981", marginTop: "4px" }}>
+                  <div style={{ fontSize: "24px", fontWeight: "800", color: "var(--brand-primary)", marginTop: "4px" }}>
                     ₹{collab.agreedAmount.toLocaleString()} {collab.currency}
                   </div>
-                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>Contractually committed upon deliverable approval</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Contractually committed upon deliverable approval</span>
                 </div>
               </div>
 
               {/* Campaign Brief */}
               <div style={cardStyle}>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc", marginBottom: "8px" }}>
-                  📢 Campaign Brief
+                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Megaphone size={16} style={{ color: "var(--color-blue)" }} /> Campaign Brief
                 </h4>
-                <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 }}>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, margin: 0 }}>
                   {collab.campaign?.description}
                 </p>
-                <div style={{ marginTop: "12px", fontSize: "12px", color: "#cbd5e1" }}>
-                  <strong>Deliverable Terms:</strong> {collab.deliverableTerms}
+                <div style={{ marginTop: "12px", fontSize: "12px", color: "var(--text-secondary)" }}>
+                  <strong style={{ color: "var(--text-primary)" }}>Deliverable Terms:</strong> {collab.deliverableTerms}
                 </div>
               </div>
 
               {/* Creator Card */}
               <div style={cardStyle}>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc", marginBottom: "8px" }}>
-                  🎨 Creator Partner
+                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Palette size={16} style={{ color: "var(--color-purple)" }} /> Creator Partner
                 </h4>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: "#f8fafc" }}>
+                <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
                   {collab.creatorProfile?.user?.name}
                 </div>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                   {collab.creatorProfile?.user?.email}
                 </div>
-                <div style={{ marginTop: "8px" }}>
+                <div style={{ marginTop: "10px" }}>
                   <a
                     href={`/media-kit/${collab.creatorProfileId}`}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ fontSize: "12px", color: "#10b981", fontWeight: "600" }}
+                    style={{ fontSize: "12px", color: "var(--brand-primary)", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
                   >
-                    View Verified Media Kit ↗
+                    View Verified Media Kit <ExternalLink size={12} />
                   </a>
                 </div>
               </div>
@@ -337,9 +369,17 @@ export default function CollaborationWorkspace() {
       {submittingDeliv && (
         <div style={modalOverlayStyle}>
           <div style={modalBoxStyle}>
-            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginBottom: "12px" }}>
-              Submit: {submittingDeliv.title}
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                Submit: {submittingDeliv.title}
+              </h3>
+              <button
+                onClick={() => setSubmittingDeliv(null)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
             <label style={statLabelStyle}>SUBMISSION URL (UNLISTED VIDEO / ASSET / POST LINK)</label>
             <input
@@ -347,7 +387,17 @@ export default function CollaborationWorkspace() {
               onChange={(e) => setSubmissionUrl(e.target.value)}
               placeholder="https://youtu.be/... or https://drive.google.com/..."
               required
-              style={{ margin: "6px 0 16px 0" }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-input)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                color: "var(--text-primary)",
+                fontSize: "13.5px",
+                outline: "none",
+                margin: "6px 0 16px 0"
+              }}
             />
 
             <label style={statLabelStyle}>SUBMISSION NOTES / TIMESTAMPS</label>
@@ -356,7 +406,17 @@ export default function CollaborationWorkspace() {
               value={submissionNotes}
               onChange={(e) => setSubmissionNotes(e.target.value)}
               placeholder="e.g. Sponsor integration starts at 01:45 with call-out link in description..."
-              style={{ margin: "6px 0 20px 0" }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-input)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                color: "var(--text-primary)",
+                fontSize: "13.5px",
+                outline: "none",
+                margin: "6px 0 20px 0"
+              }}
             />
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
@@ -364,7 +424,7 @@ export default function CollaborationWorkspace() {
                 Cancel
               </button>
               <button onClick={handleSubmitDeliverable} disabled={actionLoading} style={primaryBtnStyle}>
-                {actionLoading ? "Submitting..." : "Submit for Sponsor Review →"}
+                {actionLoading ? "Submitting..." : "Submit for Sponsor Review"}
               </button>
             </div>
           </div>
@@ -375,9 +435,17 @@ export default function CollaborationWorkspace() {
       {reviewingDeliv && (
         <div style={modalOverlayStyle}>
           <div style={modalBoxStyle}>
-            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#f8fafc", marginBottom: "12px" }}>
-              Review: {reviewingDeliv.title}
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                Review: {reviewingDeliv.title}
+              </h3>
+              <button
+                onClick={() => setReviewingDeliv(null)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
             <div style={{ marginBottom: "16px" }}>
               <label style={statLabelStyle}>REVIEW DECISION</label>
@@ -387,22 +455,24 @@ export default function CollaborationWorkspace() {
                   onClick={() => setReviewDecision("APPROVED")}
                   style={{
                     ...decisionBtnStyle,
-                    backgroundColor: reviewDecision === "APPROVED" ? "#10b981" : "var(--bg-input)",
-                    color: reviewDecision === "APPROVED" ? "#ffffff" : "#94a3b8"
+                    backgroundColor: reviewDecision === "APPROVED" ? "var(--brand-primary)" : "var(--bg-surface-raised)",
+                    color: reviewDecision === "APPROVED" ? "#ffffff" : "var(--text-secondary)",
+                    borderColor: reviewDecision === "APPROVED" ? "var(--brand-primary)" : "var(--border-subtle)"
                   }}
                 >
-                  ✅ Approve Deliverable
+                  <CheckCircle2 size={16} /> Approve Deliverable
                 </button>
                 <button
                   type="button"
                   onClick={() => setReviewDecision("CHANGES_REQUESTED")}
                   style={{
                     ...decisionBtnStyle,
-                    backgroundColor: reviewDecision === "CHANGES_REQUESTED" ? "#f59e0b" : "var(--bg-input)",
-                    color: reviewDecision === "CHANGES_REQUESTED" ? "#ffffff" : "#94a3b8"
+                    backgroundColor: reviewDecision === "CHANGES_REQUESTED" ? "var(--color-amber)" : "var(--bg-surface-raised)",
+                    color: reviewDecision === "CHANGES_REQUESTED" ? "#000000" : "var(--text-secondary)",
+                    borderColor: reviewDecision === "CHANGES_REQUESTED" ? "var(--color-amber)" : "var(--border-subtle)"
                   }}
                 >
-                  ⚠️ Request Revisions
+                  <AlertTriangle size={16} /> Request Revisions
                 </button>
               </div>
             </div>
@@ -417,7 +487,17 @@ export default function CollaborationWorkspace() {
                   ? "Optional praise or final publishing authorization..."
                   : "Specify required adjustments before deliverable can be approved..."
               }
-              style={{ margin: "6px 0 20px 0" }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-input)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                color: "var(--text-primary)",
+                fontSize: "13.5px",
+                outline: "none",
+                margin: "6px 0 20px 0"
+              }}
             />
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
@@ -425,7 +505,7 @@ export default function CollaborationWorkspace() {
                 Cancel
               </button>
               <button onClick={handleReviewDeliverable} disabled={actionLoading} style={primaryBtnStyle}>
-                {actionLoading ? "Processing..." : "Confirm Review Decision →"}
+                {actionLoading ? "Processing..." : "Confirm Review Decision"}
               </button>
             </div>
           </div>
@@ -436,11 +516,25 @@ export default function CollaborationWorkspace() {
 }
 
 // Styles
+const backBtnStyle = {
+  color: "var(--text-secondary)",
+  fontSize: "13px",
+  fontWeight: "600",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  padding: "4px 0"
+};
+
 const lifecycleBarStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "20px"
+  padding: "20px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const stagePillsContainerStyle = {
@@ -457,14 +551,15 @@ const stagePillStyle = {
 };
 
 const cardStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-lg)",
-  padding: "24px"
+  padding: "24px",
+  boxShadow: "var(--shadow-sm)"
 };
 
 const deliverableCardStyle = {
-  backgroundColor: "rgba(15, 23, 42, 0.6)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
   borderRadius: "var(--radius-md)",
   padding: "20px"
@@ -473,43 +568,50 @@ const deliverableCardStyle = {
 const submissionBoxStyle = {
   marginTop: "12px",
   padding: "10px 14px",
-  backgroundColor: "rgba(56, 189, 248, 0.08)",
-  border: "1px solid rgba(56, 189, 248, 0.2)",
-  borderRadius: "6px"
+  backgroundColor: "var(--color-blue-light)",
+  border: "1px solid rgba(56, 189, 248, 0.25)",
+  borderRadius: "var(--radius-sm)"
 };
 
 const feedbackBoxStyle = {
   marginTop: "12px",
   padding: "10px 14px",
-  backgroundColor: "rgba(245, 158, 11, 0.08)",
-  border: "1px solid rgba(245, 158, 11, 0.25)",
-  borderRadius: "6px"
+  backgroundColor: "var(--color-amber-light)",
+  border: "1px solid rgba(245, 158, 11, 0.3)",
+  borderRadius: "var(--radius-sm)"
 };
 
 const statLabelStyle = {
   fontSize: "11px",
   fontWeight: "700",
-  color: "var(--text-dim)",
+  color: "var(--text-muted)",
   letterSpacing: "0.05em"
 };
 
 const primaryBtnStyle = {
-  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-hover) 100%)",
   color: "#ffffff",
-  fontWeight: "700",
+  fontWeight: "600",
   fontSize: "13px",
-  padding: "10px 18px",
-  borderRadius: "8px"
+  padding: "9px 16px",
+  borderRadius: "var(--radius-md)",
+  border: "none",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  boxShadow: "0 2px 8px var(--brand-glow)"
 };
 
 const btnSecondaryStyle = {
-  backgroundColor: "var(--bg-card)",
+  backgroundColor: "var(--bg-surface-raised)",
   border: "1px solid var(--border-subtle)",
-  color: "#f8fafc",
+  color: "var(--text-primary)",
   fontSize: "13px",
   fontWeight: "600",
   padding: "8px 16px",
-  borderRadius: "6px"
+  borderRadius: "var(--radius-md)",
+  cursor: "pointer"
 };
 
 const decisionBtnStyle = {
@@ -518,13 +620,19 @@ const decisionBtnStyle = {
   borderRadius: "var(--radius-md)",
   border: "1px solid var(--border-subtle)",
   fontSize: "13px",
-  fontWeight: "600"
+  fontWeight: "600",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  cursor: "pointer",
+  transition: "all 0.15s ease"
 };
 
 const modalOverlayStyle = {
   position: "fixed",
   inset: 0,
-  backgroundColor: "rgba(0,0,0,0.75)",
+  backgroundColor: "var(--bg-overlay)",
   backdropFilter: "blur(6px)",
   display: "flex",
   alignItems: "center",
@@ -539,5 +647,6 @@ const modalBoxStyle = {
   borderRadius: "var(--radius-lg)",
   width: "100%",
   maxWidth: "520px",
-  padding: "28px"
+  padding: "28px",
+  boxShadow: "var(--shadow-xl)"
 };
