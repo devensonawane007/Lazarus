@@ -6,6 +6,9 @@ const twitchProvider = require("./providers/twitch.provider");
 const MockProvider = require("./providers/mock.provider");
 
 class SyncService {
+  /**
+   * Resolve platform provider instance
+   */
   static getProvider(platform) {
     const p = String(platform).toUpperCase();
     if (process.env.USE_MOCK_INTEGRATIONS === "true") {
@@ -26,8 +29,11 @@ class SyncService {
 
   /**
    * Synchronize a specific social account
+   * Ingests channel metadata, recent content uploads, and metric snapshots with full audit trails
+   * @param {string} socialAccountId
+   * @param {object} [providerOverride=null] - Optional provider override for testing/fixtures
    */
-  static async syncAccount(socialAccountId) {
+  static async syncAccount(socialAccountId, providerOverride = null) {
     const account = await prisma.socialAccount.findUnique({
       where: { id: socialAccountId },
       include: { creatorProfile: true }
@@ -37,7 +43,7 @@ class SyncService {
       throw new Error("Social account not found");
     }
 
-    const provider = this.getProvider(account.platform);
+    const provider = providerOverride || this.getProvider(account.platform);
 
     try {
       // 1. Mark status as SYNC_PENDING
@@ -46,13 +52,13 @@ class SyncService {
         data: { status: "SYNC_PENDING" }
       });
 
-      // 2. Obtain decrypted, valid token
+      // 2. Obtain decrypted, valid token (auto-refreshes if expired)
       const accessToken = await TokenService.getValidToken(socialAccountId, provider);
 
-      // 3. Fetch latest platform profile
+      // 3. Fetch latest platform channel profile
       const profile = await provider.getProfile(accessToken);
 
-      // Update social account record
+      // 4. Update social account record
       await prisma.socialAccount.update({
         where: { id: socialAccountId },
         data: {
@@ -66,10 +72,10 @@ class SyncService {
         }
       });
 
-      // 4. Ingest recent content
+      // 5. Ingest recent content uploads (updates existing records to prevent duplication)
       const contents = await provider.getContent(accessToken, account.platformAccountId, {
         uploadsPlaylistId: profile.uploadsPlaylistId,
-        maxResults: 20
+        maxResults: 25
       });
 
       for (const item of contents) {
@@ -108,7 +114,7 @@ class SyncService {
         });
       }
 
-      // 5. Ingest metrics snapshot
+      // 6. Ingest metrics snapshot
       const metrics = await provider.getMetrics(accessToken, account.platformAccountId);
       const snapshot = await prisma.creatorMetricSnapshot.create({
         data: {
@@ -117,11 +123,14 @@ class SyncService {
           followerCount: metrics.followerCount,
           totalViews: metrics.totalViews,
           engagementRate: metrics.engagementRate,
+          watchTimeMinutes: metrics.privateAnalytics?.isAuthorized
+            ? metrics.privateAnalytics.estimatedMinutesWatched
+            : null,
           snapshotDate: new Date()
         }
       });
 
-      // Update CreatorProfile general fields if empty
+      // 7. Update CreatorProfile denormalized summary fields
       await prisma.creatorProfile.update({
         where: { id: account.creatorProfileId },
         data: {
@@ -129,6 +138,25 @@ class SyncService {
           avgViews: String(metrics.recentAvgViews || 0)
         }
       });
+
+      // 8. Record audit log for successful sync
+      if (account.creatorProfile?.userId) {
+        await prisma.auditLog.create({
+          data: {
+            actorId: account.creatorProfile.userId,
+            action: "SOCIAL_ACCOUNT_SYNC_SUCCESS",
+            resourceType: "SOCIAL_ACCOUNT",
+            resourceId: account.id,
+            detailsJson: {
+              platform: account.platform,
+              itemsSynced: contents.length,
+              followerCount: metrics.followerCount,
+              totalViews: metrics.totalViews.toString(),
+              snapshotId: snapshot.id
+            }
+          }
+        });
+      }
 
       return {
         success: true,
@@ -152,13 +180,27 @@ class SyncService {
         }
       });
 
-      // Create notification for creator
+      // Record audit log for failed sync
       if (account.creatorProfile?.userId) {
+        await prisma.auditLog.create({
+          data: {
+            actorId: account.creatorProfile.userId,
+            action: "SOCIAL_ACCOUNT_SYNC_FAILED",
+            resourceType: "SOCIAL_ACCOUNT",
+            resourceId: account.id,
+            detailsJson: {
+              platform: account.platform,
+              error: syncError.message
+            }
+          }
+        });
+
+        // In-app notification for the creator
         await prisma.notification.create({
           data: {
             userId: account.creatorProfile.userId,
             title: `Sync Failed: ${account.platform}`,
-            message: `Synchronization failed: ${syncError.message}. Please check integration settings.`,
+            message: `Synchronization failed: ${syncError.message}. Please check integration settings or reconnect.`,
             type: "SYNC_FAILURE"
           }
         });

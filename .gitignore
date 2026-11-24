@@ -34,3 +34,7 @@ Thumbs.db
 dev.db
 *.sqlite
 *.sqlite3
+
+# Scratch & QA scripts
+scratch/
+

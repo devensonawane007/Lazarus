@@ -3,7 +3,10 @@ const router = express.Router();
 const integrationController = require("../controllers/integration.controller");
 const { authenticate, authorize } = require("../middleware/auth.middleware");
 
-// All integration endpoints require authentication and creator/admin role
+// 1. Public OAuth GET callback endpoint for external provider browser redirects (secured by signed HMAC state)
+router.get("/:platform/callback", integrationController.handleGetCallback);
+
+// 2. All subsequent integration endpoints require authenticated user with creator/admin role
 router.use(authenticate);
 
 router.get("/status", authorize("CREATOR", "ADMIN"), integrationController.getIntegrationStatuses);

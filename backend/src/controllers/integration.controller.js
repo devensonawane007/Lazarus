@@ -1,7 +1,7 @@
-const crypto = require("crypto");
 const prisma = require("../db/prisma");
 const SyncService = require("../integrations/sync.service");
 const TokenService = require("../integrations/token.service");
+const OAuthState = require("../integrations/oauth.state");
 const MockProvider = require("../integrations/providers/mock.provider");
 
 /**
@@ -66,7 +66,7 @@ const getIntegrationStatuses = async (req, res, next) => {
 };
 
 /**
- * Get OAuth Authorization URL with CSRF state
+ * Get OAuth Authorization URL with signed, single-use, time-limited state
  */
 const getAuthUrl = async (req, res, next) => {
   try {
@@ -82,11 +82,8 @@ const getAuthUrl = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Creator profile not found" });
     }
 
-    // Generate secure state: userId:platform:randomBytes
-    const randomSalt = crypto.randomBytes(16).toString("hex");
-    const state = Buffer.from(
-      JSON.stringify({ userId: req.user.id, platform: upperPlatform, salt: randomSalt })
-    ).toString("base64url");
+    // Generate signed, time-limited, single-use OAuth state token bound to user & platform
+    const state = OAuthState.generateState(req.user.id, upperPlatform);
 
     const provider = SyncService.getProvider(upperPlatform);
     const authData = provider.getAuthUrl(state);
@@ -102,6 +99,7 @@ const getAuthUrl = async (req, res, next) => {
 
 /**
  * Complete OAuth callback, exchange token, and store encrypted credential
+ * Strictly validates single-use state and prevents account identity hijacking
  */
 const handleCallback = async (req, res, next) => {
   try {
@@ -113,16 +111,21 @@ const handleCallback = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Authorization code is required" });
     }
 
-    // Validate CSRF state if provided
-    if (state) {
-      try {
-        const decodedState = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
-        if (decodedState.userId !== req.user.id) {
-          return res.status(403).json({ success: false, message: "Invalid OAuth state token" });
-        }
-      } catch {
-        return res.status(400).json({ success: false, message: "Malformed OAuth state token" });
-      }
+    if (!state) {
+      return res.status(400).json({
+        success: false,
+        message: "OAuth state token is required for secure CSRF verification"
+      });
+    }
+
+    // 1. Strict state validation (HMAC signature, 10m TTL, user-binding, single-use consumption)
+    try {
+      OAuthState.validateState(state, req.user.id, upperPlatform);
+    } catch (stateErr) {
+      return res.status(403).json({
+        success: false,
+        message: `OAuth security validation failed: ${stateErr.message}`
+      });
     }
 
     const creator = await prisma.creatorProfile.findUnique({
@@ -135,13 +138,35 @@ const handleCallback = async (req, res, next) => {
 
     const provider = SyncService.getProvider(upperPlatform);
 
-    // 1. Exchange code
+    // 2. Exchange authorization code for token bundle
     const tokenResult = await provider.exchangeCode(code);
 
-    // 2. Fetch profile to identify account
+    // 3. Fetch external profile to identify the account
     const profile = await provider.getProfile(tokenResult.accessToken);
 
-    // 3. Upsert SocialAccount
+    // 4. Anti-Account-Hijacking: Ensure account is not already connected to a DIFFERENT creator
+    const existingOtherOwner = await prisma.socialAccount.findFirst({
+      where: {
+        platform: upperPlatform,
+        platformAccountId: profile.platformAccountId,
+        creatorProfileId: { not: creator.id },
+        status: { in: ["CONNECTED", "SYNC_PENDING", "SYNC_FAILED", "EXPIRED"] }
+      },
+      include: {
+        creatorProfile: {
+          include: { user: { select: { id: true, name: true } } }
+        }
+      }
+    });
+
+    if (existingOtherOwner) {
+      return res.status(409).json({
+        success: false,
+        message: `Account Conflict: This ${upperPlatform} channel (${profile.displayName || profile.username}) is already linked to another creator profile (${existingOtherOwner.creatorProfile.user.name}). An account cannot be linked to multiple creators.`
+      });
+    }
+
+    // 5. Upsert SocialAccount for the current creator (Handles new connection or clean reconnection)
     const socialAccount = await prisma.socialAccount.upsert({
       where: {
         creatorProfileId_platform_platformAccountId: {
@@ -172,20 +197,53 @@ const handleCallback = async (req, res, next) => {
       }
     });
 
-    // 4. Save encrypted credentials
+    // 6. Save encrypted credentials bundle with AAD binding
     await TokenService.saveCredentials(socialAccount.id, {
       accessToken: tokenResult.accessToken,
       refreshToken: tokenResult.refreshToken,
       expiresIn: tokenResult.expiresIn
     });
 
-    // 5. Trigger initial synchronous sync
+    // 7. Audit log the connection event
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.id,
+        action: "SOCIAL_ACCOUNT_CONNECTED",
+        resourceType: "SOCIAL_ACCOUNT",
+        resourceId: socialAccount.id,
+        detailsJson: {
+          platform: upperPlatform,
+          platformAccountId: profile.platformAccountId,
+          username: profile.username
+        }
+      }
+    });
+
+    // 8. Trigger initial synchronous sync
     await SyncService.syncAccount(socialAccount.id);
+
+    // Re-fetch sanitized social account for response
+    const sanitizedAccount = await prisma.socialAccount.findUnique({
+      where: { id: socialAccount.id },
+      select: {
+        id: true,
+        platform: true,
+        platformAccountId: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        profileUrl: true,
+        status: true,
+        scopes: true,
+        lastSyncedAt: true,
+        createdAt: true
+      }
+    });
 
     res.json({
       success: true,
       message: `${upperPlatform} account connected and synchronized successfully! 🚀`,
-      account: socialAccount
+      account: sanitizedAccount
     });
   } catch (error) {
     next(error);
@@ -208,7 +266,7 @@ const triggerSync = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Social account not found" });
     }
 
-    // Ownership check
+    // Ownership check (IDOR Protection)
     if (account.creatorProfile.userId !== req.user.id && req.user.role !== "ADMIN") {
       return res.status(403).json({ success: false, message: "Forbidden: Not your social account" });
     }
@@ -226,7 +284,7 @@ const triggerSync = async (req, res, next) => {
 };
 
 /**
- * Disconnect a social account
+ * Disconnect a social account with credential purging and audit logging
  */
 const disconnectAccount = async (req, res, next) => {
   try {
@@ -241,31 +299,46 @@ const disconnectAccount = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Social account not found" });
     }
 
-    // Ownership check
+    // Ownership check (IDOR Protection)
     if (account.creatorProfile.userId !== req.user.id && req.user.role !== "ADMIN") {
       return res.status(403).json({ success: false, message: "Forbidden: Not your social account" });
     }
 
-    // Revoke at provider if token exists
+    // 1. Revoke at provider if token is available
     try {
       const provider = SyncService.getProvider(account.platform);
       const token = await TokenService.getValidToken(accountId, provider);
       await provider.revokeAccess(token);
     } catch {
-      // Proceed even if revocation fails
+      // Proceed even if external provider revocation fails (e.g. already revoked)
     }
 
-    // Delete credentials
+    // 2. Audit log the disconnection before purging
+    await prisma.auditLog.create({
+      data: {
+        actorId: req.user.id,
+        action: "SOCIAL_ACCOUNT_DISCONNECTED",
+        resourceType: "SOCIAL_ACCOUNT",
+        resourceId: accountId,
+        detailsJson: {
+          platform: account.platform,
+          platformAccountId: account.platformAccountId,
+          username: account.username
+        }
+      }
+    });
+
+    // 3. Purge encrypted credentials
     await TokenService.deleteCredentials(accountId);
 
-    // Delete social account record (Cascades contents if desired or leaves archived)
+    // 4. Delete social account record (and its cascaded credentials)
     await prisma.socialAccount.delete({
       where: { id: accountId }
     });
 
     res.json({
       success: true,
-      message: `${account.platform} account disconnected and credentials purged.`
+      message: `${account.platform} account disconnected and credentials permanently purged.`
     });
   } catch (error) {
     next(error);
@@ -381,13 +454,164 @@ const connectMockAccount = async (req, res, next) => {
       data: { lastSyncedAt: new Date() }
     });
 
+    const sanitizedAccount = await prisma.socialAccount.findUnique({
+      where: { id: socialAccount.id },
+      select: {
+        id: true,
+        platform: true,
+        platformAccountId: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        profileUrl: true,
+        status: true,
+        scopes: true,
+        lastSyncedAt: true,
+        createdAt: true
+      }
+    });
+
     res.json({
       success: true,
       message: `Verified demo ${upperPlatform} channel connected! 🚀`,
-      account: socialAccount
+      account: sanitizedAccount
     });
   } catch (error) {
     next(error);
+  }
+};
+
+/**
+ * Handle browser GET redirect from OAuth provider
+ * Validates signed state, exchanges code, securely stores tokens, syncs channel, and redirects to frontend
+ */
+const handleGetCallback = async (req, res, next) => {
+  const { platform } = req.params;
+  const { code, state, error, error_description } = req.query;
+  const upperPlatform = (platform || "").toUpperCase();
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+  if (error) {
+    return res.redirect(
+      `${frontendUrl}/creator?oauth=error&message=${encodeURIComponent(error_description || error)}`
+    );
+  }
+
+  if (!code || !state) {
+    return res.redirect(
+      `${frontendUrl}/creator?oauth=error&message=${encodeURIComponent("Missing authorization code or state token")}`
+    );
+  }
+
+  try {
+    // 1. Validate signed, single-use, time-limited state (extracts bound userId)
+    const stateResult = OAuthState.validateState(state, null, upperPlatform);
+    const userId = stateResult.payload.userId;
+
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!creator) {
+      return res.redirect(
+        `${frontendUrl}/creator?oauth=error&message=${encodeURIComponent("Creator profile not found")}`
+      );
+    }
+
+    const provider = SyncService.getProvider(upperPlatform);
+
+    // 2. Exchange code for access & refresh tokens
+    const tokenResult = await provider.exchangeCode(code);
+
+    // 3. Fetch external profile
+    const profile = await provider.getProfile(tokenResult.accessToken);
+
+    // 4. Anti-Account-Hijacking: Ensure account is not already connected to a DIFFERENT creator
+    const existingOtherOwner = await prisma.socialAccount.findFirst({
+      where: {
+        platform: upperPlatform,
+        platformAccountId: profile.platformAccountId,
+        creatorProfileId: { not: creator.id },
+        status: { in: ["CONNECTED", "SYNC_PENDING", "SYNC_FAILED", "EXPIRED"] }
+      },
+      include: {
+        creatorProfile: {
+          include: { user: { select: { id: true, name: true } } }
+        }
+      }
+    });
+
+    if (existingOtherOwner) {
+      return res.redirect(
+        `${frontendUrl}/creator?oauth=error&message=${encodeURIComponent(
+          `This ${upperPlatform} channel is already linked to another creator profile (${existingOtherOwner.creatorProfile.user.name}).`
+        )}`
+      );
+    }
+
+    // 5. Upsert SocialAccount for the current creator
+    const socialAccount = await prisma.socialAccount.upsert({
+      where: {
+        creatorProfileId_platform_platformAccountId: {
+          creatorProfileId: creator.id,
+          platform: upperPlatform,
+          platformAccountId: profile.platformAccountId
+        }
+      },
+      update: {
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarUrl,
+        profileUrl: profile.profileUrl,
+        status: "CONNECTED",
+        scopes: tokenResult.scopes || [],
+        syncError: null
+      },
+      create: {
+        creatorProfileId: creator.id,
+        platform: upperPlatform,
+        platformAccountId: profile.platformAccountId,
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarUrl,
+        profileUrl: profile.profileUrl,
+        status: "CONNECTED",
+        scopes: tokenResult.scopes || []
+      }
+    });
+
+    // 6. Save encrypted credentials bundle with AAD binding
+    await TokenService.saveCredentials(socialAccount.id, {
+      accessToken: tokenResult.accessToken,
+      refreshToken: tokenResult.refreshToken,
+      expiresIn: tokenResult.expiresIn
+    });
+
+    // 7. Audit log connection event
+    await prisma.auditLog.create({
+      data: {
+        actorId: userId,
+        action: "SOCIAL_ACCOUNT_CONNECTED_OAUTH",
+        resourceType: "SOCIAL_ACCOUNT",
+        resourceId: socialAccount.id,
+        detailsJson: {
+          platform: upperPlatform,
+          platformAccountId: profile.platformAccountId,
+          username: profile.username
+        }
+      }
+    });
+
+    // 8. Trigger initial sync
+    await SyncService.syncAccount(socialAccount.id);
+
+    return res.redirect(
+      `${frontendUrl}/creator?oauth=success&platform=${encodeURIComponent(upperPlatform)}`
+    );
+  } catch (err) {
+    return res.redirect(
+      `${frontendUrl}/creator?oauth=error&message=${encodeURIComponent(err.message)}`
+    );
   }
 };
 
@@ -395,6 +619,7 @@ module.exports = {
   getIntegrationStatuses,
   getAuthUrl,
   handleCallback,
+  handleGetCallback,
   triggerSync,
   disconnectAccount,
   connectMockAccount

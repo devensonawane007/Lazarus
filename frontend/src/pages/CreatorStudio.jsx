@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
 import {
   LineChart,
@@ -52,6 +52,11 @@ export default function CreatorStudio() {
 
   const [activeTab, setActiveTab] = useState("overview");
 
+  // URL search parameters for OAuth callbacks
+  const [searchParams] = useSearchParams();
+  const [oauthBanner, setOauthBanner] = useState(null);
+  const [syncingAccountId, setSyncingAccountId] = useState(null);
+
   // State
   const [profile, setProfile] = useState(null);
   const [analytics, setAnalytics] = useState(null);
@@ -77,6 +82,27 @@ export default function CreatorStudio() {
   useEffect(() => {
     loadStudioData();
   }, []);
+
+  useEffect(() => {
+    const oauthStatus = searchParams.get("oauth");
+    const platform = searchParams.get("platform");
+    const errorMsg = searchParams.get("message") || searchParams.get("error");
+
+    if (oauthStatus === "success") {
+      setOauthBanner({
+        type: "success",
+        message: `Successfully connected ${platform || "social"} account! Channel records and analytics synchronized with Neon PostgreSQL.`
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      loadStudioData();
+    } else if (oauthStatus === "error" || errorMsg) {
+      setOauthBanner({
+        type: "error",
+        message: errorMsg || `Failed to authenticate ${platform || "social"} account. Please verify credentials or retry.`
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [searchParams]);
 
   const loadStudioData = async () => {
     setLoading(true);
@@ -148,27 +174,41 @@ export default function CreatorStudio() {
   };
 
   const handleSyncAccount = async (accountId) => {
+    setSyncingAccountId(accountId);
     setActionLoading(true);
     try {
       await api.integrations.sync(accountId);
-      alert("Account synchronized with latest platform data.");
+      setOauthBanner({
+        type: "success",
+        message: "Account synchronized successfully with the latest platform data."
+      });
       await loadStudioData();
     } catch (err) {
-      alert("Sync failed: " + (err.message || ""));
+      setOauthBanner({
+        type: "error",
+        message: "Sync failed: " + (err.message || "Failed to sync platform account")
+      });
     } finally {
       setActionLoading(false);
+      setSyncingAccountId(null);
     }
   };
 
   const handleDisconnectAccount = async (accountId) => {
-    if (!confirm("Are you sure you want to disconnect this platform account?")) return;
+    if (!confirm("Are you sure you want to disconnect this platform account? All stored credentials will be securely wiped.")) return;
     setActionLoading(true);
     try {
       await api.integrations.disconnect(accountId);
-      alert("Account disconnected and credentials purged.");
+      setOauthBanner({
+        type: "success",
+        message: "Account disconnected and encrypted credentials purged from Neon."
+      });
       await loadStudioData();
     } catch (err) {
-      alert("Failed to disconnect: " + (err.message || ""));
+      setOauthBanner({
+        type: "error",
+        message: "Failed to disconnect account: " + (err.message || "")
+      });
     } finally {
       setActionLoading(false);
     }
@@ -284,6 +324,59 @@ export default function CreatorStudio() {
         </div>
       ) : (
         <div>
+          {/* Top OAuth & Action Notification Banner */}
+          {oauthBanner && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 16px",
+                borderRadius: "var(--radius-md)",
+                marginBottom: "20px",
+                backgroundColor:
+                  oauthBanner.type === "success"
+                    ? "var(--brand-light)"
+                    : "rgba(239, 68, 68, 0.12)",
+                border: `1px solid ${
+                  oauthBanner.type === "success"
+                    ? "var(--brand-primary)"
+                    : "rgba(239, 68, 68, 0.35)"
+                }`,
+                color:
+                  oauthBanner.type === "success"
+                    ? "var(--brand-primary)"
+                    : "var(--color-red)"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {oauthBanner.type === "success" ? (
+                  <Check size={18} style={{ flexShrink: 0 }} />
+                ) : (
+                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                )}
+                <span style={{ fontSize: "13px", fontWeight: "600" }}>
+                  {oauthBanner.message}
+                </span>
+              </div>
+              <button
+                onClick={() => setOauthBanner(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "4px"
+                }}
+                aria-label="Dismiss banner"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
           {/* Top MOU Banner if not signed */}
           {profile && !profile.isMouSigned && (
             <div style={mouAlertBannerStyle}>
@@ -492,181 +585,340 @@ export default function CreatorStudio() {
               {/* Provider Cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
                 {/* YouTube */}
-                <div style={integrationCardStyle}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, backgroundColor: "#ef4444", color: "#ffffff" }}>
-                        <Film size={20} />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>YouTube</h4>
-                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Google OAuth 2.0 & Data API v3</span>
-                      </div>
-                    </div>
-                    {integrations.find((a) => a.platform === "YOUTUBE") ? (
-                      <span className="badge badge-green">Connected</span>
-                    ) : (
-                      <span className="badge badge-gray">Not Connected</span>
-                    )}
-                  </div>
+                {(() => {
+                  const acc = integrations.find((a) => a.platform === "YOUTUBE");
+                  const isSyncing = syncingAccountId === acc?.id || acc?.status === "SYNC_PENDING";
+                  const isFailed = acc?.status === "SYNC_FAILED" || Boolean(acc?.syncError);
+                  const isExpired = acc?.status === "EXPIRED" || acc?.status === "REVOKED";
 
-                  {integrations.find((a) => a.platform === "YOUTUBE") ? (
-                    <div>
-                      {(() => {
-                        const acc = integrations.find((a) => a.platform === "YOUTUBE");
-                        return (
+                  return (
+                    <div style={integrationCardStyle}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <div style={{ ...providerIconStyle, backgroundColor: "#ef4444", color: "#ffffff" }}>
+                            <Film size={20} />
+                          </div>
                           <div>
-                            <div style={connectedAccountBoxStyle}>
-                              <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
-                              <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
-                              Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
-                            </div>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                <RefreshCw size={12} /> Re-Sync
-                              </button>
-                              <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                <Unlink size={12} /> Disconnect
-                              </button>
+                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>YouTube</h4>
+                            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Google OAuth 2.0 & Data API v3</span>
+                          </div>
+                        </div>
+                        {!acc ? (
+                          <span className="badge badge-gray">Not Connected</span>
+                        ) : isSyncing ? (
+                          <span className="badge badge-blue">Syncing...</span>
+                        ) : isFailed ? (
+                          <span className="badge badge-red">Sync Failed</span>
+                        ) : isExpired ? (
+                          <span className="badge badge-amber">Token Expired</span>
+                        ) : (
+                          <span className="badge badge-green">Connected</span>
+                        )}
+                      </div>
+
+                      {acc ? (
+                        <div>
+                          <div style={connectedAccountBoxStyle}>
+                            <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
+                            <div style={{ overflow: "hidden" }}>
+                              <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{acc.displayName}</div>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                             </div>
                           </div>
-                        );
-                      })()}
+
+                          {acc.syncError && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(239, 68, 68, 0.1)",
+                              border: "1px solid rgba(239, 68, 68, 0.25)",
+                              color: "var(--color-red)",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
+                              <span><strong>Sync Error:</strong> {acc.syncError}</span>
+                            </div>
+                          )}
+
+                          {isExpired && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(245, 158, 11, 0.1)",
+                              border: "1px solid rgba(245, 158, 11, 0.25)",
+                              color: "var(--color-amber)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                              <span>OAuth grant has expired. Please reconnect your account.</span>
+                            </div>
+                          )}
+
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
+                            Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            {isExpired ? (
+                              <button onClick={() => handleConnectOAuth("youtube")} disabled={actionLoading} style={btnSmallPrimaryStyle}>
+                                <Zap size={12} /> Reconnect Channel
+                              </button>
+                            ) : (
+                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading || isSyncing} style={btnSmallOutlineStyle}>
+                                <RefreshCw size={12} style={isSyncing ? { animation: "spin 1s linear infinite" } : {}} />
+                                {isSyncing ? "Syncing..." : "Re-Sync"}
+                              </button>
+                            )}
+                            <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
+                              <Unlink size={12} /> Disconnect
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
+                            Import your YouTube subscriber counts, video library, and lifetime analytics with official Google authorization.
+                          </p>
+                          <button onClick={() => handleConnectOAuth("youtube")} style={connectBtnStyle}>
+                            Connect YouTube Channel →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div>
-                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
-                        Import your YouTube subscriber counts, video library, and lifetime analytics with official Google authorization.
-                      </p>
-                      <button onClick={() => handleConnectOAuth("youtube")} style={connectBtnStyle}>
-                        Connect YouTube Channel →
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  );
+                })()}
 
                 {/* Instagram */}
-                <div style={integrationCardStyle}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", color: "#ffffff" }}>
-                        <Film size={20} />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Instagram</h4>
-                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Meta Graph API (Professional)</span>
-                      </div>
-                    </div>
-                    {integrations.find((a) => a.platform === "INSTAGRAM") ? (
-                      <span className="badge badge-green">Connected</span>
-                    ) : (
-                      <span className="badge badge-gray">Not Connected</span>
-                    )}
-                  </div>
+                {(() => {
+                  const acc = integrations.find((a) => a.platform === "INSTAGRAM");
+                  const isSyncing = syncingAccountId === acc?.id || acc?.status === "SYNC_PENDING";
+                  const isFailed = acc?.status === "SYNC_FAILED" || Boolean(acc?.syncError);
+                  const isExpired = acc?.status === "EXPIRED" || acc?.status === "REVOKED";
 
-                  {integrations.find((a) => a.platform === "INSTAGRAM") ? (
-                    <div>
-                      {(() => {
-                        const acc = integrations.find((a) => a.platform === "INSTAGRAM");
-                        return (
+                  return (
+                    <div style={integrationCardStyle}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <div style={{ ...providerIconStyle, background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", color: "#ffffff" }}>
+                            <Film size={20} />
+                          </div>
                           <div>
-                            <div style={connectedAccountBoxStyle}>
-                              <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
-                              <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
-                              Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
-                            </div>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                <RefreshCw size={12} /> Re-Sync
-                              </button>
-                              <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                <Unlink size={12} /> Disconnect
-                              </button>
+                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Instagram</h4>
+                            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Meta Graph API (Professional)</span>
+                          </div>
+                        </div>
+                        {!acc ? (
+                          <span className="badge badge-gray">Not Connected</span>
+                        ) : isSyncing ? (
+                          <span className="badge badge-blue">Syncing...</span>
+                        ) : isFailed ? (
+                          <span className="badge badge-red">Sync Failed</span>
+                        ) : isExpired ? (
+                          <span className="badge badge-amber">Token Expired</span>
+                        ) : (
+                          <span className="badge badge-green">Connected</span>
+                        )}
+                      </div>
+
+                      {acc ? (
+                        <div>
+                          <div style={connectedAccountBoxStyle}>
+                            <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
+                            <div style={{ overflow: "hidden" }}>
+                              <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{acc.displayName}</div>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                             </div>
                           </div>
-                        );
-                      })()}
+
+                          {acc.syncError && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(239, 68, 68, 0.1)",
+                              border: "1px solid rgba(239, 68, 68, 0.25)",
+                              color: "var(--color-red)",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
+                              <span><strong>Sync Error:</strong> {acc.syncError}</span>
+                            </div>
+                          )}
+
+                          {isExpired && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(245, 158, 11, 0.1)",
+                              border: "1px solid rgba(245, 158, 11, 0.25)",
+                              color: "var(--color-amber)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                              <span>OAuth grant has expired. Please reconnect your account.</span>
+                            </div>
+                          )}
+
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
+                            Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            {isExpired ? (
+                              <button onClick={() => handleConnectOAuth("instagram")} disabled={actionLoading} style={btnSmallPrimaryStyle}>
+                                <Zap size={12} /> Reconnect Account
+                              </button>
+                            ) : (
+                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading || isSyncing} style={btnSmallOutlineStyle}>
+                                <RefreshCw size={12} style={isSyncing ? { animation: "spin 1s linear infinite" } : {}} />
+                                {isSyncing ? "Syncing..." : "Re-Sync"}
+                              </button>
+                            )}
+                            <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
+                              <Unlink size={12} /> Disconnect
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
+                            Authorize your Instagram Creator or Business account via Meta to verify followers, reels, and engagement rates.
+                          </p>
+                          <button onClick={() => handleConnectOAuth("instagram")} style={connectBtnStyle}>
+                            Connect Instagram →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div>
-                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
-                        Authorize your Instagram Creator or Business account via Meta to verify followers, reels, and engagement rates.
-                      </p>
-                      <button onClick={() => handleConnectOAuth("instagram")} style={connectBtnStyle}>
-                        Connect Instagram →
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  );
+                })()}
 
                 {/* Twitch */}
-                <div style={integrationCardStyle}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <div style={{ ...providerIconStyle, backgroundColor: "#9146ff", color: "#ffffff" }}>
-                        <Film size={20} />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Twitch</h4>
-                        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Twitch OAuth & Helix API</span>
-                      </div>
-                    </div>
-                    {integrations.find((a) => a.platform === "TWITCH") ? (
-                      <span className="badge badge-green">Connected</span>
-                    ) : (
-                      <span className="badge badge-gray">Not Connected</span>
-                    )}
-                  </div>
+                {(() => {
+                  const acc = integrations.find((a) => a.platform === "TWITCH");
+                  const isSyncing = syncingAccountId === acc?.id || acc?.status === "SYNC_PENDING";
+                  const isFailed = acc?.status === "SYNC_FAILED" || Boolean(acc?.syncError);
+                  const isExpired = acc?.status === "EXPIRED" || acc?.status === "REVOKED";
 
-                  {integrations.find((a) => a.platform === "TWITCH") ? (
-                    <div>
-                      {(() => {
-                        const acc = integrations.find((a) => a.platform === "TWITCH");
-                        return (
+                  return (
+                    <div style={integrationCardStyle}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <div style={{ ...providerIconStyle, backgroundColor: "#9146ff", color: "#ffffff" }}>
+                            <Film size={20} />
+                          </div>
                           <div>
-                            <div style={connectedAccountBoxStyle}>
-                              <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
-                              <div>
-                                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{acc.displayName}</div>
-                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
-                              Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
-                            </div>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading} style={btnSmallOutlineStyle}>
-                                <RefreshCw size={12} /> Re-Sync
-                              </button>
-                              <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
-                                <Unlink size={12} /> Disconnect
-                              </button>
+                            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Twitch</h4>
+                            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Twitch OAuth & Helix API</span>
+                          </div>
+                        </div>
+                        {!acc ? (
+                          <span className="badge badge-gray">Not Connected</span>
+                        ) : isSyncing ? (
+                          <span className="badge badge-blue">Syncing...</span>
+                        ) : isFailed ? (
+                          <span className="badge badge-red">Sync Failed</span>
+                        ) : isExpired ? (
+                          <span className="badge badge-amber">Token Expired</span>
+                        ) : (
+                          <span className="badge badge-green">Connected</span>
+                        )}
+                      </div>
+
+                      {acc ? (
+                        <div>
+                          <div style={connectedAccountBoxStyle}>
+                            <img src={acc.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&q=80"} alt={acc.displayName} style={miniAvatarStyle} />
+                            <div style={{ overflow: "hidden" }}>
+                              <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{acc.displayName}</div>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{acc.username}</div>
                             </div>
                           </div>
-                        );
-                      })()}
+
+                          {acc.syncError && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(239, 68, 68, 0.1)",
+                              border: "1px solid rgba(239, 68, 68, 0.25)",
+                              color: "var(--color-red)",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
+                              <span><strong>Sync Error:</strong> {acc.syncError}</span>
+                            </div>
+                          )}
+
+                          {isExpired && (
+                            <div style={{
+                              margin: "10px 0",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              backgroundColor: "rgba(245, 158, 11, 0.1)",
+                              border: "1px solid rgba(245, 158, 11, 0.25)",
+                              color: "var(--color-amber)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}>
+                              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                              <span>OAuth grant has expired. Please reconnect your account.</span>
+                            </div>
+                          )}
+
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", margin: "10px 0" }}>
+                            Last Synced: {acc.lastSyncedAt ? new Date(acc.lastSyncedAt).toLocaleString() : "Never"}
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            {isExpired ? (
+                              <button onClick={() => handleConnectOAuth("twitch")} disabled={actionLoading} style={btnSmallPrimaryStyle}>
+                                <Zap size={12} /> Reconnect Channel
+                              </button>
+                            ) : (
+                              <button onClick={() => handleSyncAccount(acc.id)} disabled={actionLoading || isSyncing} style={btnSmallOutlineStyle}>
+                                <RefreshCw size={12} style={isSyncing ? { animation: "spin 1s linear infinite" } : {}} />
+                                {isSyncing ? "Syncing..." : "Re-Sync"}
+                              </button>
+                            )}
+                            <button onClick={() => handleDisconnectAccount(acc.id)} disabled={actionLoading} style={btnSmallDangerStyle}>
+                              <Unlink size={12} /> Disconnect
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
+                            Authorize your Twitch channel to verify live broadcast history, follower metrics, and VOD statistics.
+                          </p>
+                          <button onClick={() => handleConnectOAuth("twitch")} style={connectBtnStyle}>
+                            Connect Twitch →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div>
-                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "16px" }}>
-                        Authorize your Twitch channel to verify live broadcast history, follower metrics, and VOD statistics.
-                      </p>
-                      <button onClick={() => handleConnectOAuth("twitch")} style={connectBtnStyle}>
-                        Connect Twitch →
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
 
               {/* Developer / Testing Notice & Quick Mock Connect */}
@@ -1537,6 +1789,20 @@ const btnSmallDangerStyle = {
   backgroundColor: "var(--bg-surface)",
   color: "var(--color-red)",
   fontSize: "12px",
+  padding: "6px 12px",
+  borderRadius: "var(--radius-sm)",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px"
+};
+
+const btnSmallPrimaryStyle = {
+  backgroundColor: "var(--brand-primary)",
+  color: "#ffffff",
+  border: "none",
+  fontSize: "12px",
+  fontWeight: "600",
   padding: "6px 12px",
   borderRadius: "var(--radius-sm)",
   cursor: "pointer",
