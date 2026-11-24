@@ -119,11 +119,15 @@ const getCampaigns = async (req, res, next) => {
 };
 
 /**
- * Get applicants for a specific campaign
+ * Get applicants for a specific campaign (Enforces Brand Ownership)
  */
 const getApplicants = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const brandProfile = await prisma.brandProfile.findUnique({
+      where: { userId: req.user.id }
+    });
 
     const campaign = await prisma.campaign.findUnique({
       where: { id },
@@ -145,6 +149,14 @@ const getApplicants = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: "Campaign not found"
+      });
+    }
+
+    // Ownership check against IDOR
+    if (!brandProfile || campaign.brandProfileId !== brandProfile.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You can only view applicants for campaigns you own"
       });
     }
 
@@ -173,7 +185,7 @@ const getApplicants = async (req, res, next) => {
 };
 
 /**
- * Update application status (Accept / Reject)
+ * Update application status (Accept / Reject) (Enforces Brand Ownership)
  */
 const updateApplicationStatus = async (req, res, next) => {
   try {
@@ -185,6 +197,29 @@ const updateApplicationStatus = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Status must be either ACCEPTED or REJECTED"
+      });
+    }
+
+    const brandProfile = await prisma.brandProfile.findUnique({
+      where: { userId: req.user.id }
+    });
+
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId }
+    });
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found"
+      });
+    }
+
+    // Ownership check against IDOR
+    if (!brandProfile || campaign.brandProfileId !== brandProfile.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You can only manage applications for campaigns you own"
       });
     }
 

@@ -22,58 +22,47 @@ export default function InvestorDashboard() {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch(`${API}/api/projects`);
-      const data = await res.json();
-      setProjects(data);
-    } catch {
-      alert("Failed to load projects");
+      const data = await api.projects.list();
+      setProjects(Array.isArray(data) ? data : (data.projects || []));
+    } catch (err) {
+      console.error("Failed to load projects", err);
     }
   };
 
   const fetchMyInvestments = async () => {
-    setMyInvestments([
-      { projectName: "AI Music Generator", amount: 50000, date: "2024-01-15" },
-      { projectName: "Eco-Friendly App", amount: 30000, date: "2024-02-01" },
-      { projectName: "Gaming Platform", amount: 75000, date: "2024-02-03" }
-    ]);
+    try {
+      const data = await api.investments.getDashboard();
+      if (data && data.investments) {
+        setMyInvestments(data.investments);
+      }
+    } catch (err) {
+      console.error("Failed to load investments", err);
+    }
   };
 
   const invest = async (projectId, projectTitle) => {
     if (!amount) return alert("Enter investment amount");
 
-    const res = await fetch(`${API}/api/contribute`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        project_id: projectId,
-        amount
-      })
-    });
-
-    const data = await res.json();
-    alert(`Investment successful! Total raised: ₹${data.totalRaised}`);
-    
-    setMyInvestments([
-      ...myInvestments,
-      { projectName: projectTitle, amount: parseFloat(amount), date: new Date().toISOString().split('T')[0] }
-    ]);
-    setAmount("");
+    try {
+      const data = await api.investments.contribute(projectId, amount);
+      alert(`Investment successful! Total raised: ₹${data.totalRaised || amount}`);
+      setAmount("");
+      fetchMyInvestments();
+      fetchProjects();
+    } catch (err) {
+      alert(err.message || "Investment failed");
+    }
   };
 
   const simulateRevenue = async () => {
     if (!revenue || !selectedProject) return;
 
-    const res = await fetch(`${API}/api/simulate-revenue`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        project_id: selectedProject.id,
-        revenue_amount: revenue
-      })
-    });
-
-    const data = await res.json();
-    setPayouts(data.payouts || []);
+    try {
+      const data = await api.investments.simulateRevenue(selectedProject.id, revenue);
+      setPayouts(data.payouts || []);
+    } catch (err) {
+      alert(err.message || "Revenue simulation failed");
+    }
   };
 
   const updateInvestment = (index, field, value) => {
