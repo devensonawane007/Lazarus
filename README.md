@@ -286,13 +286,34 @@ npm run dev
 
 ---
 
-## 🔒 Security & Anti-Fraud Measures
+## ⚖️ Escrow Reality: Simulated Ledger vs. Real Payments
 
-1. **Server-Side Identity Isolation:** All project creations, profile edits, and campaign applications bind to `req.user.id` from the verified JWT. Frontend-supplied ownership IDs are never trusted.
-2. **Milestone Escrow Invariance:** Funds cannot transition backwards from `RELEASED` or `REFUNDED` states.
-3. **Password Security:** Salted hashes with `bcryptjs` (work factor 10). Passwords are never returned in JSON payloads.
-4. **Zero Client Secrets:** `GEMINI_API_KEY` and database credentials exist strictly on the backend.
-5. **Strict CORS Policy:** Restricted to trusted frontend origin.
+> [!IMPORTANT]
+> **Simulated Escrow Architecture Notice**  
+> Lazarus V2 currently implements a **Finite State Machine (FSM) Relational Database Ledger Simulation** backed by PostgreSQL transactions (`prisma.$transaction`).  
+> 
+> - **What it does:** It mathematically enforces financial state transitions (`PENDING -> HELD -> SUBMITTED -> APPROVED -> RELEASED`), logs immutable audit records in `EscrowTransaction`, verifies investor backing before release, and prevents double disbursement.
+> - **What it does NOT do:** It does **not** move real fiat currency, process credit cards, or integrate with live banking / gateway providers (such as Stripe, Razorpay, or Finternet). All balances, equity revenue shares, and disbursements are simulated within the PostgreSQL ledger. Real payment gateway integrations are slated for a future production release.
+
+---
+
+## 🔒 Security, RBAC & Anti-IDOR Protections
+
+1. **Server-Side Identity Isolation (Anti-IDOR):** All project creations, profile edits, campaign applications, and application approvals strictly bind to `req.user.id` resolved from the verified JWT. Frontend-supplied ownership IDs are never trusted.
+2. **Campaign Ownership Enforcement:** Brands can only inspect applicants and approve/reject applications for campaigns they personally own (`campaign.brandProfileId === brandProfile.id`).
+3. **Milestone Escrow Invariance:** Funds cannot transition backwards from `RELEASED` or `REFUNDED` states. Milestone approvals require the reviewer to be a verified investor in that specific project.
+4. **Password Security:** Salted hashes with `bcryptjs` (work factor 10). Passwords and password hashes are never returned in JSON payloads.
+5. **Zero Client Secrets:** `GEMINI_API_KEY` and database credentials exist strictly on the backend; the Vite frontend client bundle contains zero secret keys.
+6. **Strict CORS Policy:** Restricted to trusted frontend origin (`FRONTEND_URL`).
+
+---
+
+## ⚠️ Known Limitations & Deployment Roadmap
+
+1. **Remote Database Configuration:** Active `DATABASE_URL` and `DIRECT_URL` must be configured in `backend/.env` for cloud deployment on Neon PostgreSQL.
+2. **Gemini Live Key:** A valid Google Gemini API key is required in `backend/.env` for live AI generation. When missing, the server responds with a structured fallback blueprint without throwing runtime errors.
+3. **Third-Party Payment Gateway Integration:** Fiat transfers currently operate via the internal database ledger simulation; production webhook processing (Stripe / Razorpay) is on the roadmap.
+4. **Frontend Code Splitting:** Large single-chunk production bundle (668 kB) can be further split into dynamic route chunks via React `lazy()`.
 
 ---
 
