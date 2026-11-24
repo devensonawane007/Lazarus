@@ -797,6 +797,19 @@ export default function CreatorDashboard() {
             </div>
 
             {/* ===============================
+         ANALYTICS CARD
+      ================================ */}
+            <div style={styles.card}>
+                <div style={styles.sectionHeader}>
+                    <div style={styles.iconBox}>
+                        📈
+                    </div>
+                    <h2 style={styles.sectionTitle}>Channel Performance & Analytics</h2>
+                </div>
+                <VideoPerformanceGraph />
+            </div>
+
+            {/* ===============================
          CAMPAIGNS CARD
       ================================ */}
             <div style={styles.card}>
@@ -821,9 +834,6 @@ export default function CreatorDashboard() {
                             No matching campaigns yet. Save your profile to see personalized campaigns!
                         </p>
                     )}
-                    <button onClick={() => navigate("/creator-deals")}>
-                        🤝 Brand Deals
-                    </button>
                     {campaigns.map((c) => (
                         <div key={c.id} style={styles.campaignCard}>
                             <h3 style={styles.campaignTitle}>{c.title}</h3>
@@ -846,8 +856,6 @@ export default function CreatorDashboard() {
                             >
                                 Apply to Campaign
                             </button>
-                            <VideoPerformanceGraph />
-                            <hr />
                         </div>
                     ))}
                 </div>
