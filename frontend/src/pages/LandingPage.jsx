@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import ThemeToggle from "../components/ui/ThemeToggle";
 import { useTheme } from "../context/ThemeContext";
+import InteractiveScrollStory from "../components/landing/InteractiveScrollStory";
 
 const PREVIEW_CHART_DATA = [
   { day: "Mon", followers: 42100, views: 18200 },
@@ -88,7 +89,10 @@ export default function LandingPage() {
         </div>
 
         {/* Center Nav Links */}
-        <div style={{ display: "flex", gap: "28px", alignItems: "center" }} className="desktop-links hide-on-mobile">
+        <div style={{ display: "flex", gap: "24px", alignItems: "center" }} className="desktop-links hide-on-mobile">
+          <a href="#product-story" style={{ color: "var(--brand-primary)", fontSize: "14px", fontWeight: "700" }}>
+            Product Story
+          </a>
           <a href="#creator-studio" style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "600" }}>
             Creator Studio
           </a>
@@ -368,6 +372,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* =========================================================
+          HOMEPAGE INTERACTIVE SCROLL STORY (CHAPTERS 1 - 6)
+      ========================================================== */}
+      <InteractiveScrollStory />
 
       {/* =========================================================
           FEATURE GRID: CREATOR STUDIO

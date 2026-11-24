@@ -1,10 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Lazarus — Creator Studio & Opportunity Network</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('lazarus_theme');
+          var theme = saved === 'dark' ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
