@@ -510,8 +510,8 @@ input::placeholder, textarea::placeholder {
 
 .scroll-story-sticky-pane {
   position: sticky;
-  top: 150px;
-  height: 600px;
+  top: 152px;
+  height: 610px;
   max-height: calc(100vh - 170px);
   width: 100%;
 }
@@ -535,13 +535,83 @@ input::placeholder, textarea::placeholder {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-subtle);
   background-color: var(--bg-surface-raised);
+  flex-shrink: 0;
 }
 
 .scroll-story-preview-body {
-  padding: 24px;
+  padding: 0;
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
+}
+
+/* Stage viewport and cross-fading scene panels */
+.story-stage-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.story-scene-panel {
+  position: absolute;
+  inset: 0;
+  padding: 24px;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.story-scene-panel.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+/* Streaming SVG data connection paths */
+.svg-data-path {
+  stroke-dasharray: 6 6;
+  animation: dashFlow 1.2s linear infinite;
+}
+
+@keyframes dashFlow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Central Hub Pulse */
+.animate-pulse-hub {
+  animation: pulseScale 3s ease-in-out infinite;
+}
+
+@keyframes pulseScale {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 16px var(--brand-glow);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 32px var(--brand-glow);
+  }
+}
+
+/* Radial Gauge Fill */
+.gauge-progress-ring {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Staggered entry classes */
+.stagger-item {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Floating animation for scattered elements */
