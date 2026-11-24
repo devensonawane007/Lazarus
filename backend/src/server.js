@@ -11,6 +11,10 @@ const { errorHandler, notFoundHandler } = require("./middleware/error.middleware
 const authRoutes = require("./routes/auth.routes");
 const creatorRoutes = require("./routes/creator.routes");
 const brandRoutes = require("./routes/brand.routes");
+const integrationRoutes = require("./routes/integration.routes");
+const collaborationRoutes = require("./routes/collaboration.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const adminRoutes = require("./routes/admin.routes");
 const projectRoutes = require("./routes/project.routes");
 const investmentRoutes = require("./routes/investment.routes");
 const escrowRoutes = require("./routes/escrow.routes");
@@ -18,7 +22,6 @@ const aiRoutes = require("./routes/ai.routes");
 
 // Controllers for backward compatibility mappings
 const creatorController = require("./controllers/creator.controller");
-const brandController = require("./controllers/brand.controller");
 const investmentController = require("./controllers/investment.controller");
 const { authenticate } = require("./middleware/auth.middleware");
 
@@ -39,8 +42,9 @@ app.use(express.json({ limit: "10mb" })); // Support base64 MOU signatures
 // Health Check
 app.get("/", (req, res) => {
   res.json({
-    name: "Lazarus V2 Backend",
+    name: "Lazarus V3 — Creator Studio & Opportunity Network",
     status: "healthy",
+    version: "3.0.0",
     timestamp: new Date().toISOString()
   });
 });
@@ -49,13 +53,17 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/creator", creatorRoutes);
 app.use("/api/brand", brandRoutes);
+app.use("/api/integrations", integrationRoutes);
+app.use("/api/collaborations", collaborationRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/escrow", escrowRoutes);
 app.use("/api/ai", aiRoutes);
 
 // -------------------------------------------------------------
-// Backward Compatibility Route Aliases (For Legacy Frontend Calls)
+// Backward Compatibility Route Aliases
 // -------------------------------------------------------------
 app.post("/api/contribute", authenticate, investmentController.contribute);
 app.post("/api/simulate-revenue", authenticate, investmentController.simulateRevenue);
@@ -69,7 +77,7 @@ app.use(errorHandler);
 // Start Server
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
-    console.log(`🚀 Lazarus V2 backend running on http://localhost:${PORT}`);
+    console.log(`🚀 Lazarus V3 backend running on http://localhost:${PORT}`);
   });
 }
 

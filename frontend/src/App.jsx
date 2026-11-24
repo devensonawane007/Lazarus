@@ -1,14 +1,12 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
-import Home from "./pages/Home";
-import CreatorDashboard from "./pages/CreatorDashboard";
-import BrandDashboard from "./pages/BrandDashboard";
-import BrandCampaign from "./pages/BrandCampaign";
-import InvestorDashboard from "./pages/InvestorDashboard";
-import CreateProject from "./pages/CreateProject";
-import ProjectPage from "./pages/ProjectPage";
-import CreatorProfile from "./pages/CreatorProfile";
+import CreatorStudio from "./pages/CreatorStudio";
+import BrandStudio from "./pages/BrandStudio";
+import AdminStudio from "./pages/AdminStudio";
+import CollaborationWorkspace from "./pages/CollaborationWorkspace";
+import PublicMediaKit from "./pages/PublicMediaKit";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -16,94 +14,67 @@ function App() {
   return (
     <Routes>
       {/* =====================
-          Public Route
+          Public Marketing & Auth Routes
       ====================== */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/media-kit/:id" element={<PublicMediaKit />} />
 
       {/* =====================
-          Creator Routes
+          Creator Studio
       ====================== */}
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute role="creator">
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-
       <Route
         path="/creator"
         element={
-          <ProtectedRoute role="creator">
-            <CreatorDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/create-project"
-        element={
-          <ProtectedRoute role="creator">
-            <CreateProject />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/creator-profile"
-        element={
-          <ProtectedRoute role="creator">
-            <CreatorProfile />
+          <ProtectedRoute role="CREATOR">
+            <CreatorStudio />
           </ProtectedRoute>
         }
       />
 
       {/* =====================
-          Brand Routes
+          Brand Studio
       ====================== */}
       <Route
         path="/brand"
         element={
-          <ProtectedRoute role="brand">
-            <BrandDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* 🔥 BRAND CAMPAIGN CREATION */}
-      <Route
-        path="/brand/campaign"
-        element={
-          <ProtectedRoute role="brand">
-            <BrandCampaign />
+          <ProtectedRoute role="BRAND">
+            <BrandStudio />
           </ProtectedRoute>
         }
       />
 
       {/* =====================
-          Investor Routes
+          Admin Console
       ====================== */}
       <Route
-        path="/investor"
+        path="/admin"
         element={
-          <ProtectedRoute role="investor">
-            <InvestorDashboard />
+          <ProtectedRoute role="ADMIN">
+            <AdminStudio />
           </ProtectedRoute>
         }
       />
 
       {/* =====================
-          Shared / Authenticated
+          Collaboration Deal Room
       ====================== */}
       <Route
-        path="/project"
+        path="/collaborations/:id"
         element={
           <ProtectedRoute>
-            <ProjectPage />
+            <CollaborationWorkspace />
           </ProtectedRoute>
         }
       />
+
+      {/* =====================
+          Legacy Route Compatibility Redirects
+      ====================== */}
+      <Route path="/home" element={<Navigate to="/creator" replace />} />
+      <Route path="/creator-profile" element={<Navigate to="/creator" replace />} />
+      <Route path="/brand/campaign" element={<Navigate to="/brand" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

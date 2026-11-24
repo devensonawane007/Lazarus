@@ -25,7 +25,6 @@ async function request(endpoint, options = {}) {
   try {
     const res = await fetch(url, config);
 
-    // Try parsing json
     let data;
     const contentType = res.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -50,7 +49,7 @@ async function request(endpoint, options = {}) {
 }
 
 /**
- * Standardized API Client
+ * Standardized Lazarus V3 API Client
  */
 export const api = {
   // Authentication
@@ -84,7 +83,21 @@ export const api = {
     }
   },
 
-  // Creator
+  // Social Media Integrations
+  integrations: {
+    getStatus: () => request("/api/integrations/status"),
+    getAuthUrl: (platform) => request(`/api/integrations/${platform}/auth-url`),
+    callback: (platform, data) =>
+      request(`/api/integrations/${platform}/callback`, { method: "POST", body: data }),
+    sync: (accountId) =>
+      request(`/api/integrations/${accountId}/sync`, { method: "POST" }),
+    disconnect: (accountId) =>
+      request(`/api/integrations/${accountId}/disconnect`, { method: "POST" }),
+    connectMock: (platform) =>
+      request("/api/integrations/connect-mock", { method: "POST", body: { platform } })
+  },
+
+  // Creator Studio
   creator: {
     getProfile: () => request("/api/creator/profile"),
     getPublicProfile: (id) => request(`/api/creator/profile/${id}`),
@@ -92,67 +105,75 @@ export const api = {
       request("/api/creator/profile", { method: "POST", body: profileData }),
     signMou: (mouData) =>
       request("/api/creator/mou", { method: "POST", body: mouData }),
+    getAnalytics: () => request("/api/creator/analytics"),
+    getContent: (params = "") => request(`/api/creator/content${params}`),
+    getMediaKit: () => request("/api/creator/media-kit"),
+    getPublicMediaKit: (id) => request(`/api/creator/media-kit/${id}`),
     getMatchedCampaigns: () => request("/api/creator/matched-campaigns"),
     applyToCampaign: (data) =>
       request("/api/creator/apply-campaign", { method: "POST", body: data })
   },
 
-  // Brand
+  // Brand Studio
   brand: {
     createCampaign: (data) =>
       request("/api/brand/campaign", { method: "POST", body: data }),
-    getCampaigns: () => request("/api/brand/campaigns"),
+    getCampaigns: (params = "") => request(`/api/brand/campaigns${params}`),
     getApplicants: (campaignId) =>
       request(`/api/brand/campaign/${campaignId}/applicants`),
     updateApplication: (campaignId, appId, status) =>
       request(`/api/brand/campaign/${campaignId}/applications/${appId}`, {
         method: "PATCH",
         body: { status }
+      }),
+    discoverCreators: (params = "") => request(`/api/brand/creators${params}`)
+  },
+
+  // Collaborations
+  collaborations: {
+    list: () => request("/api/collaborations"),
+    getById: (id) => request(`/api/collaborations/${id}`),
+    transition: (id, status, note = "") =>
+      request(`/api/collaborations/${id}/transition`, {
+        method: "POST",
+        body: { status, note }
+      }),
+    addDeliverable: (id, deliverableData) =>
+      request(`/api/collaborations/${id}/deliverables`, {
+        method: "POST",
+        body: deliverableData
+      }),
+    submitDeliverable: (deliverableId, data) =>
+      request(`/api/collaborations/deliverables/${deliverableId}/submit`, {
+        method: "POST",
+        body: data
+      }),
+    reviewDeliverable: (deliverableId, data) =>
+      request(`/api/collaborations/deliverables/${deliverableId}/review`, {
+        method: "POST",
+        body: data
       })
   },
 
-  // Projects
-  projects: {
-    create: (projectData) =>
-      request("/api/projects", { method: "POST", body: projectData }),
-    list: (params = "") => request(`/api/projects${params}`),
-    getById: (id) => request(`/api/projects/${id}`)
+  // Notifications
+  notifications: {
+    list: (params = "") => request(`/api/notifications${params}`),
+    markAsRead: (id) => request(`/api/notifications/${id}/read`, { method: "PATCH" }),
+    markAllAsRead: () => request("/api/notifications/read-all", { method: "POST" })
   },
 
-  // Investments & Investor Experience
-  investments: {
-    contribute: (projectId, amount) =>
-      request("/api/investments/contribute", {
-        method: "POST",
-        body: { project_id: projectId, amount: Number(amount) }
+  // Admin Operations & Privacy
+  admin: {
+    getHealth: () => request("/api/admin/health"),
+    getUsers: (params = "") => request(`/api/admin/users${params}`),
+    toggleVerification: (brandId, isVerified) =>
+      request(`/api/admin/brands/${brandId}/verification`, {
+        method: "PATCH",
+        body: { isVerified }
       }),
-    getDashboard: () => request("/api/investments/dashboard"),
-    simulateRevenue: (projectId, revenueAmount) =>
-      request("/api/investments/simulate-revenue", {
-        method: "POST",
-        body: { project_id: projectId, revenue_amount: Number(revenueAmount) }
-      })
-  },
-
-  // Escrow & Milestones
-  escrow: {
-    submitMilestone: (milestoneId, data) =>
-      request(`/api/escrow/milestones/${milestoneId}/submit`, {
-        method: "POST",
-        body: data
-      }),
-    approveMilestone: (milestoneId, data = {}) =>
-      request(`/api/escrow/milestones/${milestoneId}/approve`, {
-        method: "POST",
-        body: data
-      }),
-    rejectMilestone: (milestoneId, data = {}) =>
-      request(`/api/escrow/milestones/${milestoneId}/reject`, {
-        method: "POST",
-        body: data
-      }),
-    getTransactions: (projectId) =>
-      request(`/api/escrow/projects/${projectId}/transactions`)
+    getAuditLogs: (params = "") => request(`/api/admin/audit-logs${params}`),
+    exportData: () => request("/api/admin/privacy/export"),
+    deleteAccount: () => request("/api/admin/privacy/delete-account", { method: "DELETE" })
   },
 
   // Gemini AI Assistant

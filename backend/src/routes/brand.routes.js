@@ -4,15 +4,18 @@ const brandController = require("../controllers/brand.controller");
 const { authenticate, authorize } = require("../middleware/auth.middleware");
 
 // Create campaign
-router.post("/campaign", authenticate, authorize("BRAND"), brandController.createCampaign);
+router.post("/campaign", authenticate, authorize("BRAND", "ADMIN"), brandController.createCampaign);
 
-// List campaigns (Fixes missing GET /api/brand/campaigns)
+// List campaigns
 router.get("/campaigns", authenticate, brandController.getCampaigns);
 
-// View applicants
-router.get("/campaign/:id/applicants", authenticate, authorize("BRAND"), brandController.getApplicants);
+// Creator Discovery Catalog
+router.get("/creators", authenticate, authorize("BRAND", "ADMIN"), brandController.discoverCreators);
 
-// Accept / Reject applicant
-router.patch("/campaign/:id/applications/:appId", authenticate, authorize("BRAND"), brandController.updateApplicationStatus);
+// View applicants
+router.get("/campaign/:id/applicants", authenticate, authorize("BRAND", "ADMIN"), brandController.getApplicants);
+
+// Accept / Reject / Shortlist applicant
+router.patch("/campaign/:id/applications/:appId", authenticate, authorize("BRAND", "ADMIN"), brandController.updateApplicationStatus);
 
 module.exports = router;

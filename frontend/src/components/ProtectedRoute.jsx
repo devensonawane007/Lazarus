@@ -6,12 +6,22 @@ export default function ProtectedRoute({ children, role }) {
 
   // Not logged in or no valid token
   if (!token || !user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Role-based access (case-insensitive check)
-  if (role && user.role?.toLowerCase() !== role.toLowerCase()) {
-    return <Navigate to="/" replace />;
+  // Role-based access
+  if (role) {
+    const userRole = (user.role || "").toUpperCase();
+    const allowedRoles = Array.isArray(role)
+      ? role.map((r) => r.toUpperCase())
+      : [role.toUpperCase()];
+
+    // ADMIN can access any workspace
+    if (userRole !== "ADMIN" && !allowedRoles.includes(userRole)) {
+      if (userRole === "BRAND") return <Navigate to="/brand" replace />;
+      if (userRole === "ADMIN") return <Navigate to="/admin" replace />;
+      return <Navigate to="/creator" replace />;
+    }
   }
 
   return children;

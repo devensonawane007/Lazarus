@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  const initialMode = searchParams.get("mode") === "register";
+  const initialRole = searchParams.get("role") || "creator";
+
+  const [isRegistering, setIsRegistering] = useState(initialMode);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -12,12 +17,17 @@ export default function Login() {
     name: "",
     email: "",
     password: "",
-    role: "creator"
+    role: initialRole.toLowerCase(),
+    companyName: ""
   });
 
   const handleChange = (e) => {
     setErrorMessage("");
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const setRole = (role) => {
+    setForm({ ...form, role });
   };
 
   const handleAuth = async (e) => {
@@ -35,7 +45,8 @@ export default function Login() {
           name: form.name,
           email: form.email,
           password: form.password,
-          role: form.role
+          role: form.role,
+          companyName: form.companyName || undefined
         });
       } else {
         if (!form.email || !form.password) {
@@ -49,11 +60,10 @@ export default function Login() {
 
       const userRole = (res.user?.role || form.role).toLowerCase();
 
-      // Clear navigation based on actual user role
       if (userRole === "brand") {
         navigate("/brand");
-      } else if (userRole === "investor") {
-        navigate("/investor");
+      } else if (userRole === "admin") {
+        navigate("/admin");
       } else {
         navigate("/creator");
       }
@@ -66,61 +76,41 @@ export default function Login() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <style>{`
-        input, select, button { transition: all 0.2s; }
-        input:focus, select:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); outline: none; }
-        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(5,150,105,0.35); }
-      `}</style>
+    <div style={containerStyle}>
+      {/* Back to Home Link */}
+      <div style={{ position: "absolute", top: "24px", left: "32px" }}>
+        <button
+          onClick={() => navigate("/")}
+          style={{ color: "#94a3b8", fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}
+        >
+          ← Back to Lazarus Home
+        </button>
+      </div>
 
-      <div style={{
-        width: '100%',
-        maxWidth: '460px',
-        background: '#ffffff',
-        borderRadius: '24px',
-        padding: '44px 38px',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.15)'
-      }}>
-        {/* Logo / Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: '800', color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>
-            Lazarus <span style={{ color: '#059669' }}>V2</span>
+      <div style={cardStyle}>
+        {/* Brand Header */}
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+          <div style={logoIconStyle}>⚡</div>
+          <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#f8fafc", marginTop: "12px", letterSpacing: "-0.02em" }}>
+            Lazarus <span style={{ color: "#10b981" }}>V3</span>
           </h2>
-          <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '6px' }}>
-            Creator Economy, Brand Campaigns & Escrow Platform
+          <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+            {isRegistering
+              ? "Create your account to unlock verified analytics & brand deals"
+              : "Sign in to access your Creator or Brand Studio"}
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div style={{
-          display: 'flex',
-          background: '#f3f4f6',
-          borderRadius: '12px',
-          padding: '4px',
-          marginBottom: '24px'
-        }}>
+        {/* Tab Switcher: Sign In vs Register */}
+        <div style={tabContainerStyle}>
           <button
             type="button"
             onClick={() => { setIsRegistering(false); setErrorMessage(""); }}
             style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '9px',
-              border: 'none',
-              fontWeight: '600',
-              fontSize: '14px',
-              cursor: 'pointer',
-              background: !isRegistering ? '#ffffff' : 'transparent',
-              color: !isRegistering ? '#111827' : '#6b7280',
-              boxShadow: !isRegistering ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
+              ...tabButtonStyle,
+              backgroundColor: !isRegistering ? "var(--bg-card)" : "transparent",
+              color: !isRegistering ? "#f8fafc" : "#94a3b8",
+              fontWeight: !isRegistering ? "700" : "500"
             }}
           >
             Sign In
@@ -129,16 +119,10 @@ export default function Login() {
             type="button"
             onClick={() => { setIsRegistering(true); setErrorMessage(""); }}
             style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '9px',
-              border: 'none',
-              fontWeight: '600',
-              fontSize: '14px',
-              cursor: 'pointer',
-              background: isRegistering ? '#ffffff' : 'transparent',
-              color: isRegistering ? '#111827' : '#6b7280',
-              boxShadow: isRegistering ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
+              ...tabButtonStyle,
+              backgroundColor: isRegistering ? "var(--bg-card)" : "transparent",
+              color: isRegistering ? "#f8fafc" : "#94a3b8",
+              fontWeight: isRegistering ? "700" : "500"
             }}
           >
             Create Account
@@ -147,144 +131,202 @@ export default function Login() {
 
         {/* Error Notification */}
         {errorMessage && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            color: '#991b1b',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            fontSize: '13px',
-            marginBottom: '20px',
-            border: '1px solid #fecaca'
-          }}>
+          <div style={errorBannerStyle}>
             ⚠️ {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleAuth}>
+        <form onSubmit={handleAuth} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Role Picker (if Registering) */}
           {isRegistering && (
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                Full Name / Brand Name
-              </label>
+            <div>
+              <label style={labelStyle}>Select Account Role</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => setRole("creator")}
+                  style={{
+                    ...roleBtnStyle,
+                    borderColor: form.role === "creator" ? "#10b981" : "var(--border-subtle)",
+                    backgroundColor: form.role === "creator" ? "var(--primary-light)" : "var(--bg-input)",
+                    color: form.role === "creator" ? "#10b981" : "#94a3b8"
+                  }}
+                >
+                  <span style={{ fontSize: "16px" }}>🎨</span> Creator
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("brand")}
+                  style={{
+                    ...roleBtnStyle,
+                    borderColor: form.role === "brand" ? "#10b981" : "var(--border-subtle)",
+                    backgroundColor: form.role === "brand" ? "var(--primary-light)" : "var(--bg-input)",
+                    color: form.role === "brand" ? "#10b981" : "#94a3b8"
+                  }}
+                >
+                  <span style={{ fontSize: "16px" }}>🏢</span> Brand Partner
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isRegistering && (
+            <div>
+              <label style={labelStyle}>Full Name / Creator Handle</label>
               <input
-                type="text"
                 name="name"
-                placeholder="e.g. John Doe / Nike Studio"
                 value={form.name}
                 onChange={handleChange}
+                placeholder="e.g. Alex Rivera"
                 required
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  backgroundColor: '#fafafa',
-                  boxSizing: 'border-box'
-                }}
               />
             </div>
           )}
 
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-              Email Address
-            </label>
+          {isRegistering && form.role === "brand" && (
+            <div>
+              <label style={labelStyle}>Company / Brand Name</label>
+              <input
+                name="companyName"
+                value={form.companyName}
+                onChange={handleChange}
+                placeholder="e.g. NextGen Software Inc"
+                required
+              />
+            </div>
+          )}
+
+          <div>
+            <label style={labelStyle}>Email Address</label>
             <input
-              type="text"
+              type="email"
               name="email"
-              placeholder="name@example.com"
               value={form.email}
               onChange={handleChange}
+              placeholder="creator@lazarus.io"
               required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                fontSize: '15px',
-                backgroundColor: '#fafafa',
-                boxSizing: 'border-box'
-              }}
             />
           </div>
 
-          <div style={{ marginBottom: '18px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-              Password
-            </label>
+          <div>
+            <label style={labelStyle}>Password</label>
             <input
               type="password"
               name="password"
-              placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
+              placeholder="••••••••"
               required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                fontSize: '15px',
-                backgroundColor: '#fafafa',
-                boxSizing: 'border-box'
-              }}
             />
           </div>
-
-          {isRegistering && (
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-                Account Persona
-              </label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  backgroundColor: '#fafafa',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="creator">🎨 Creator (Build projects & apply to brand campaigns)</option>
-                <option value="brand">🏢 Brand (Launch sponsor campaigns & hire creators)</option>
-                <option value="investor">💼 Investor (Pledge escrow funding & earn revenue share)</option>
-              </select>
-            </div>
-          )}
 
           <button
             type="submit"
             disabled={loading}
             style={{
-              width: '100%',
-              backgroundColor: '#059669',
-              color: '#ffffff',
-              fontWeight: '600',
-              padding: '15px',
-              borderRadius: '12px',
-              fontSize: '16px',
-              border: 'none',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              ...submitBtnStyle,
               opacity: loading ? 0.7 : 1
             }}
           >
-            {loading ? "Processing..." : isRegistering ? "Register Account" : "Sign In to Lazarus"}
+            {loading
+              ? "Authenticating with Neon PostgreSQL..."
+              : isRegistering
+              ? "Create Lazarus Account 🚀"
+              : "Sign In to Studio →"}
           </button>
         </form>
-
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Powered by Neon Hosted PostgreSQL & Smart Escrow State Engine
-          </p>
-        </div>
       </div>
     </div>
   );
 }
+
+const containerStyle = {
+  minHeight: "100vh",
+  backgroundColor: "var(--bg-canvas)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "24px",
+  position: "relative"
+};
+
+const cardStyle = {
+  width: "100%",
+  maxWidth: "460px",
+  backgroundColor: "var(--bg-surface)",
+  border: "1px solid var(--border-subtle)",
+  borderRadius: "var(--radius-lg)",
+  padding: "36px 32px",
+  boxShadow: "var(--shadow-lg)"
+};
+
+const logoIconStyle = {
+  width: "44px",
+  height: "44px",
+  borderRadius: "12px",
+  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "22px",
+  boxShadow: "0 0 20px rgba(16, 185, 129, 0.4)"
+};
+
+const tabContainerStyle = {
+  display: "flex",
+  backgroundColor: "var(--bg-input)",
+  borderRadius: "var(--radius-md)",
+  padding: "4px",
+  border: "1px solid var(--border-subtle)",
+  marginBottom: "20px"
+};
+
+const tabButtonStyle = {
+  flex: 1,
+  padding: "8px",
+  borderRadius: "6px",
+  fontSize: "13px",
+  transition: "all 0.15s ease"
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#cbd5e1",
+  marginBottom: "6px"
+};
+
+const roleBtnStyle = {
+  padding: "10px",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--border-subtle)",
+  fontSize: "13px",
+  fontWeight: "600",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  transition: "all 0.15s ease"
+};
+
+const submitBtnStyle = {
+  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+  color: "#ffffff",
+  fontWeight: "700",
+  fontSize: "14px",
+  padding: "12px",
+  borderRadius: "var(--radius-md)",
+  marginTop: "12px",
+  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
+};
+
+const errorBannerStyle = {
+  backgroundColor: "rgba(239, 68, 68, 0.12)",
+  border: "1px solid rgba(239, 68, 68, 0.3)",
+  color: "#ef4444",
+  padding: "10px 14px",
+  borderRadius: "var(--radius-md)",
+  fontSize: "13px",
+  marginBottom: "16px"
+};

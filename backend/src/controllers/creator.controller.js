@@ -1,4 +1,6 @@
 const prisma = require("../db/prisma");
+const MetricsService = require("../services/metrics.service");
+const MatchingService = require("../services/matching.service");
 
 /**
  * Get Creator Profile
@@ -11,6 +13,7 @@ const getProfile = async (req, res, next) => {
       include: {
         user: { select: { id: true, name: true, email: true } },
         mous: { orderBy: { signedAt: "desc" }, take: 1 },
+        socialAccounts: { where: { status: "CONNECTED" } },
         projects: { include: { milestones: true } }
       }
     });
@@ -43,6 +46,7 @@ const getPublicProfile = async (req, res, next) => {
       },
       include: {
         user: { select: { id: true, name: true } },
+        socialAccounts: { where: { status: "CONNECTED" } },
         projects: { where: { status: "COMPLETED" } }
       }
     });
@@ -54,10 +58,10 @@ const getPublicProfile = async (req, res, next) => {
       });
     }
 
-    // Format for legacy frontend compatibility as well
     res.json({
       id: profile.id,
       name: profile.user.name,
+      bio: profile.bio,
       niches: profile.niches,
       portfolio: {
         platform: profile.platform,
@@ -65,6 +69,7 @@ const getPublicProfile = async (req, res, next) => {
         followers: profile.followers,
         avgViews: profile.avgViews
       },
+      socialAccounts: profile.socialAccounts,
       isMouSigned: profile.isMouSigned
     });
   } catch (error) {
@@ -180,53 +185,21 @@ const signMOU = async (req, res, next) => {
 };
 
 /**
- * Get Matched Campaigns for Creator based on niches
+ * Get Matched Campaigns for Creator with Explainable Matching Scores
  */
 const getMatchedCampaigns = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const profile = await prisma.creatorProfile.findUnique({
-      where: { userId },
-      include: { applications: true }
+      where: { userId }
     });
 
-    if (!profile || !profile.niches || profile.niches.length === 0) {
+    if (!profile) {
       return res.json([]);
     }
 
-    // Find campaigns where niches overlap with creator niches
-    const campaigns = await prisma.campaign.findMany({
-      where: {
-        status: "OPEN",
-        niches: {
-          hasSome: profile.niches
-        }
-      },
-      include: {
-        brandProfile: {
-          include: { user: { select: { name: true } } }
-        },
-        applications: {
-          where: { creatorProfileId: profile.id }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
-
-    // Format response matching frontend expectation
-    const formatted = campaigns.map((c) => ({
-      id: c.id,
-      brandName: c.brandProfile.companyName || c.brandProfile.user.name,
-      title: c.title,
-      description: c.description,
-      niches: c.niches,
-      budget: c.budget,
-      deliverables: c.deliverables,
-      alreadyApplied: c.applications.length > 0,
-      createdAt: c.createdAt
-    }));
-
-    res.json(formatted);
+    const rankedOpportunities = await MatchingService.getOpportunitiesForCreator(profile.id);
+    res.json(rankedOpportunities);
   } catch (error) {
     next(error);
   }
@@ -266,7 +239,8 @@ const applyToCampaign = async (req, res, next) => {
     }
 
     const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId }
+      where: { id: campaignId },
+      include: { brandProfile: true }
     });
 
     if (!campaign) {
@@ -292,18 +266,171 @@ const applyToCampaign = async (req, res, next) => {
       });
     }
 
-    const application = await prisma.campaignApplication.create({
-      data: {
-        campaignId,
-        creatorProfileId: profile.id,
-        pitch: pitch || ""
-      }
+    // Create both application and initiate collaboration lifecycle in transaction
+    const { application, collaboration } = await prisma.$transaction(async (tx) => {
+      const app = await tx.campaignApplication.create({
+        data: {
+          campaignId,
+          creatorProfileId: profile.id,
+          pitch: pitch || ""
+        }
+      });
+
+      const collab = await tx.collaboration.create({
+        data: {
+          campaignId,
+          creatorProfileId: profile.id,
+          brandProfileId: campaign.brandProfileId,
+          status: "APPLIED",
+          agreedAmount: campaign.budget,
+          currency: "INR",
+          deliverableTerms: campaign.deliverables,
+          deadline: campaign.deadline
+        }
+      });
+
+      // Notify Brand
+      await tx.notification.create({
+        data: {
+          userId: campaign.brandProfile.userId,
+          title: "New Creator Application Received",
+          message: `A creator applied to your campaign "${campaign.title}". Pitch: ${
+            pitch ? pitch.slice(0, 100) : "Review application"
+          }`,
+          type: "APPLICATION_STATUS",
+          linkUrl: `/collaborations/${collab.id}`
+        }
+      });
+
+      return { application: app, collaboration: collab };
     });
 
     res.status(201).json({
       success: true,
-      message: "Applied successfully 🚀",
-      application
+      message: "Application submitted and collaboration workspace initialized! 🚀",
+      application,
+      collaborationId: collaboration.id
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get unified cross-platform analytics for Creator Studio
+ */
+const getUnifiedAnalytics = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const profile = await prisma.creatorProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Creator profile not found" });
+    }
+
+    const analytics = await MetricsService.getUnifiedMetrics(profile.id);
+    res.json({
+      success: true,
+      analytics
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get unified content library for Creator Studio
+ */
+const getContentLibrary = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { platform, page = 1, limit = 20 } = req.query;
+
+    const profile = await prisma.creatorProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Creator profile not found" });
+    }
+
+    let whereClause = { creatorProfileId: profile.id };
+    if (platform && platform !== "ALL") {
+      whereClause.platform = platform.toUpperCase();
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [contents, total] = await Promise.all([
+      prisma.creatorContent.findMany({
+        where: whereClause,
+        orderBy: { publishedAt: "desc" },
+        skip,
+        take: Number(limit)
+      }),
+      prisma.creatorContent.count({ where: whereClause })
+    ]);
+
+    res.json({
+      success: true,
+      contents,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get automatically generated Creator Media Kit
+ */
+const getMediaKit = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const profile = await prisma.creatorProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Creator profile not found" });
+    }
+
+    const mediaKit = await MetricsService.generateMediaKit(profile.id);
+    res.json({
+      success: true,
+      mediaKit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Public Creator Media Kit View (Accessible without auth)
+ */
+const getPublicMediaKit = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const profile = await prisma.creatorProfile.findFirst({
+      where: {
+        OR: [{ id }, { userId: id }]
+      }
+    });
+
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Creator not found" });
+    }
+
+    const mediaKit = await MetricsService.generateMediaKit(profile.id);
+    res.json({
+      success: true,
+      mediaKit
     });
   } catch (error) {
     next(error);
@@ -316,5 +443,9 @@ module.exports = {
   updateProfile,
   signMOU,
   getMatchedCampaigns,
-  applyToCampaign
+  applyToCampaign,
+  getUnifiedAnalytics,
+  getContentLibrary,
+  getMediaKit,
+  getPublicMediaKit
 };
